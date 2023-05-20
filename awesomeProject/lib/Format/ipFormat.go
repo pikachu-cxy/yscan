@@ -15,16 +15,16 @@ type IP interface {
 //支持三种ip格式
 //文本格式  暂定
 //ip段格式 192.168.21.1/24
-//ip范围  192.168.21.1-255 ||192.168.21.1-192.168.21.255
+//ip范围  192.168.21.1-255 ||192.168.21.1-192.168.21.255(最后都转换为这种格式）
 //ip 192.168.21.1
 
 // IpCIDRFormat 检测ip段格式 192.168.21.1/24
-func IpCIDRFormat(host string) ([]string, bool) {
+func IpCIDRFormat(host string) (string, bool) {
 
 	ip, ipNet, err := net.ParseCIDR(host)
 	if err != nil {
 		fmt.Println("无效的 IP 段:", err)
-		return []string{}, false
+		return "", false
 	}
 
 	// 获取 IP 地址范围的开始和结束 IP
@@ -39,7 +39,7 @@ func IpCIDRFormat(host string) ([]string, bool) {
 	fmt.Println("IP 地址范围：")
 	fmt.Println("开始 IP:", startIP)
 	fmt.Println("结束 IP:", endIP)
-	return []string{}, true
+	return string(startIP) + "-" + string(endIP), true
 }
 
 //ipFormat 判断ip格式
@@ -56,23 +56,24 @@ func ipFormat(host string) bool {
 }
 
 // IsIPRange2 192.168.21.1-255
-func IsIPRange2(s string) bool {
+func IsIPRange2(s string) (string, bool) {
 	// 以连字符分割字符串，判断是否有两个 IP 地址
 	parts := strings.Split(s, "-")
 	if len(parts) != 2 {
-		return false
+		return "", false
 	}
 	ip1 := net.ParseIP(parts[0])
 
 	if ip1 == nil {
-		return false
+		return "", false
 	}
 	// 获取 IP 地址的前三位
 	ip2 := parts[0][:strings.LastIndex(parts[0], ".")+1] + parts[1]
 	if net.ParseIP(ip2) == nil {
-		return false
+		return "", false
 	}
-	return ipCompare(parts[0], parts[1])
+	ip := parts[0] + "-" + ip2
+	return ip, ipCompare(parts[0], parts[1])
 }
 
 //192.168.21.1-192.168.21.255
@@ -123,4 +124,59 @@ func ipToInt(ip string) uint32 {
 	c, _ := strconv.Atoi(parts[2])
 	d, _ := strconv.Atoi(parts[3])
 	return uint32((a << 24) | (b << 16) | (c << 8) | d)
+}
+
+func parseIPRange(ipRange string) ([]string, error) {
+	// 定义正则表达式
+	re := regexp.MustCompile(`^(\d{1,3}\.\d{1,3}\.\d{1,3}\.)?(\d{1,3})-(\d{1,3})$`)
+
+	// 匹配 IP 段
+	matches := re.FindStringSubmatch(ipRange)
+	if matches == nil {
+		return nil, fmt.Errorf("invalid IP range: %s", ipRange)
+	}
+
+	// 解析 IP 段的起始和结束地址
+	start, err := strconv.Atoi(matches[2])
+	if err != nil {
+		return nil, fmt.Errorf("invalid IP range: %s", ipRange)
+	}
+	end, err := strconv.Atoi(matches[3])
+	if err != nil {
+		return nil, fmt.Errorf("invalid IP range: %s", ipRange)
+	}
+
+	// 构造 IP 切片
+	ips := make([]string, end-start+1)
+	for i := start; i <= end; i++ {
+		if len(matches[1]) > 0 {
+			ips[i-start] = fmt.Sprintf("%s%d", matches[1], i)
+		} else {
+			ips[i-start] = fmt.Sprintf("%d", i)
+		}
+	}
+
+	return ips, nil
+}
+func ChooseFormat(ip string) (s []string) {
+	//if ipFormat(ip) {
+	//	return ip
+	//}
+	ipscope, ipbool := IpCIDRFormat(ip)
+	if ipbool {
+		ips, _ := parseIPRange(ipscope)
+		return ips
+	}
+	ipbool = IsIPRange(ip)
+	if ipbool {
+		ips, _ := parseIPRange(ip)
+		return ips
+	}
+	ip2, ipbool1 := IsIPRange2(ip)
+	if ipbool1 {
+		ips, _ := parseIPRange(ip2)
+		return ips
+	}
+
+	return []string{}
 }
