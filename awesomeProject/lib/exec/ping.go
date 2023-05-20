@@ -4,33 +4,60 @@ import (
 	"awesomeProject/lib/Format"
 	"fmt"
 	"os/exec"
+	"runtime"
+	"sync"
 )
+
+func osping(host string, wg *sync.WaitGroup) {
+	defer wg.Done()
+	var cmd *exec.Cmd
+	switch runtime.GOOS {
+	case "windows":
+		cmd = exec.Command("ping", host, "-n", "1", "-w", "200")
+	case "linux":
+		cmd = exec.Command("ping", host, "-c", "1", "-W", "1")
+	case "darwin":
+		cmd = exec.Command("ping", host, "-c", "1", "-W", "200")
+	case "freebsd":
+		cmd = exec.Command("ping", "-c", "1", "-W", "200", host)
+	case "openbsd":
+		cmd = exec.Command("ping", "-c", "1", "-w", "200", host)
+	case "netbsd":
+		cmd = exec.Command("ping", "-c", "1", "-w", "2", host)
+	default:
+		cmd = exec.Command("ping", "-c", "1", host)
+	}
+	err := cmd.Run()
+	if err != nil {
+		//return false
+	} else {
+		fmt.Printf("%s is alive！\n", host)
+	}
+}
 
 func IpIcmp(ip *string) {
 
-	ips, _ := sometone(*ip)
+	var wg sync.WaitGroup
+
+	ips := sometone(*ip)
+
 	if ips != nil {
 		for _, v := range ips {
-			//fmt.Printf("%d and %s",i,v)
-			cmd := exec.Command("ping", v, "-n", "1", "-w", "200") // Windows系统上使用 "-n" 参数指定发送的 ICMP 请求次数
-			err := cmd.Run()
-			if err != nil {
-				fmt.Printf("执行命令出错：%v\n", err)
-				return
-			} else {
-				fmt.Printf("%s is alive！", *ip)
-			}
+			wg.Add(1)
+			go osping(v, &wg)
 
 		}
+		wg.Wait()
+
 	}
 
 }
 
-func sometone(ip string) (s []string, bool2 bool) {
+func sometone(ip string) []string {
 	ips := Format.ChooseFormat(ip)
 
 	if ips == nil {
-		return nil, false
+		return nil
 	}
-	return ips, true
+	return ips
 }
