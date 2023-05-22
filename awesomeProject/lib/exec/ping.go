@@ -1,12 +1,22 @@
 package exec
 
 import (
+	"awesomeProject/lib/File"
 	"awesomeProject/lib/Format"
 	"fmt"
 	"os/exec"
 	"runtime"
+	"strconv"
 	"sync"
 )
+
+var number int
+var output string
+var ipr string
+
+func OutputSet(output1 string) {
+	output = output1
+}
 
 func osping(host string, wg *sync.WaitGroup) {
 	defer wg.Done()
@@ -31,24 +41,24 @@ func osping(host string, wg *sync.WaitGroup) {
 	if err != nil {
 		//return false
 	} else {
+		number++
+		File.WriteFile(output, host+"  is alive!\n")
 		fmt.Printf("%s is alive！\n", host)
 	}
 }
 
-func IpIcmp(ip *string) {
+func IpIcmp(ip string) {
 
 	var wg sync.WaitGroup
-
-	ips := sometone(*ip)
-
+	ips := sometone(ip)
+	number = 0
 	if ips != nil {
 		for _, v := range ips {
 			wg.Add(1)
 			go osping(v, &wg)
-
 		}
 		wg.Wait()
-
+		File.WriteFile(output, ip+"段存活ip数量为："+strconv.Itoa(number)+"\n")
 	}
 
 }
