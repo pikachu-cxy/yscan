@@ -49,6 +49,7 @@ func CreateFile(filename string) error {
 func WriteFile(filename string, content string) error {
 	file, err := os.OpenFile(filename, os.O_WRONLY|os.O_APPEND|os.O_CREATE, 0644)
 	if err != nil {
+		//CreateFile(filename)
 		fmt.Println("打开文件失败:", err)
 		return err
 	}

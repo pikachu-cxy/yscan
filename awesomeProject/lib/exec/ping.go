@@ -18,7 +18,7 @@ func OutputSet(output1 string) {
 	output = output1
 }
 
-func osping(host string, wg *sync.WaitGroup) {
+func osping(host string, wg *sync.WaitGroup, silent bool) {
 	defer wg.Done()
 	var cmd *exec.Cmd
 	switch runtime.GOOS {
@@ -42,12 +42,15 @@ func osping(host string, wg *sync.WaitGroup) {
 		//return false
 	} else {
 		number++
-		File.WriteFile(output, host+"  is alive!\n")
+		if silent {
+			File.WriteFile(output, host+"  is alive!\n")
+		}
+
 		fmt.Printf("%s is alive！\n", host)
 	}
 }
 
-func IpIcmp(ip string) {
+func IpIcmp(ip string, silent bool) {
 
 	var wg sync.WaitGroup
 	ips := sometone(ip)
@@ -55,10 +58,13 @@ func IpIcmp(ip string) {
 	if ips != nil {
 		for _, v := range ips {
 			wg.Add(1)
-			go osping(v, &wg)
+			go osping(v, &wg, silent)
 		}
 		wg.Wait()
-		File.WriteFile(output, ip+"段存活ip数量为："+strconv.Itoa(number)+"\n")
+		if silent {
+			File.WriteFile(output, ip+"段存活ip数量为："+strconv.Itoa(number)+"\n")
+		}
+
 	}
 
 }

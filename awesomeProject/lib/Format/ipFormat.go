@@ -159,10 +159,35 @@ func parseIPRange(ipRange string) []string {
 
 	return ipList
 }
+
+func IsDomainRange(domain string) bool {
+
+	pattern := `^[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$` // 正则表达式模式
+
+	matched, err := regexp.MatchString(pattern, domain)
+
+	if err != nil {
+		fmt.Println("正则匹配出错:", err)
+		return false
+	}
+
+	if matched {
+		fmt.Println("域名匹配成功")
+		return true
+	} else {
+		fmt.Println("域名不匹配")
+		return false
+	}
+	return false
+}
+
 func ChooseFormat(ip string) (s []string) {
-	//if ipFormat(ip) {
-	//	return ip
-	//}
+
+	p := make([]string, 0)
+	if ipFormat(ip) {
+		p = append(p, ip)
+		return p
+	}
 	ipscope, ipbool := IpCIDRFormat(ip)
 	if ipbool {
 		return ipscope
@@ -175,6 +200,10 @@ func ChooseFormat(ip string) (s []string) {
 	if ipbool1 {
 		ipscope, ipbool = IsIPRange(ips)
 		return ipscope
+	}
+	if IsDomainRange(ip) {
+		p = append(p, ip)
+		return p
 	}
 
 	return []string{}

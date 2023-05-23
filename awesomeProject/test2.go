@@ -16,7 +16,7 @@ func main() {
   ╚██╔╝  ╚════██║██║     ██╔══██║██║╚██╗██║
    ██║   ███████║╚██████╗██║  ██║██║ ╚████║
    ╚═╝   ╚══════╝ ╚═════╝╚═╝  ╚═╝╚═╝  ╚═══╝
-					by cxy
+				     by cxy
 --------------------------------------------
 `
 
@@ -25,15 +25,16 @@ func main() {
 		useIcmp  bool
 		outPut   string
 		filePath string
-		ip       string
+		host     string
+		silent   bool
 		//ipList   []string
 	)
 	// 定义命令行参数
-	flag.StringVar(&ip, "ip", "127.0.0.1", "输入IP 地址，格式支持：192.168.21.1/24, 192.168.21.1-255, 192.168.21.1-192.168.21.255")
-
+	flag.StringVar(&host, "host", "127.0.0.1", "输入IP/域名 地址，格式支持：192.168.21.1/24, 192.168.21.1-255, 192.168.21.1-192.168.21.255, www.example.com")
 	flag.BoolVar(&useIcmp, "icmp", false, "是否确定进行icmp扫描")
 	flag.StringVar(&filePath, "ipf", "", "指定IP段文件路径")
-	flag.StringVar(&outPut, "output", "output.txt", "是否导出扫描结果")
+	flag.StringVar(&outPut, "output", "output.txt", "导出扫描结果到指定文件")
+	flag.BoolVar(&silent, "silent", false, "是否输出结果至文件,默认不输出")
 	flag.Parse()
 
 	//port := flag.Int("port", 0, "端口号")
@@ -41,14 +42,21 @@ func main() {
 	start := time.Now()
 	if useIcmp {
 		if filePath == "" {
-			exec.IpIcmp(ip)
+			if silent {
+				File.CreateFile(outPut)
+				exec.OutputSet(outPut)
+				exec.IpIcmp(host, silent)
+			}
+			if silent == false {
+				exec.IpIcmp(host, silent)
+			}
 		} else {
-			if outPut != "" {
+			if silent {
 				File.CreateFile(outPut)
 				ips, _ := File.ReadIPRangesFromFile(filePath)
 				exec.OutputSet(outPut)
 				for _, ip1 := range ips {
-					exec.IpIcmp(ip1)
+					exec.IpIcmp(ip1, silent)
 				}
 			}
 		}
