@@ -27,12 +27,15 @@ func main() {
 		filePath string
 		host     string
 		silent   bool
-		//ipList   []string
+		url      string
+		port     string
 	)
 	// 定义命令行参数
 	flag.StringVar(&host, "host", "127.0.0.1", "输入IP/域名 地址，格式支持：192.168.21.1/24, 192.168.21.1-255, 192.168.21.1-192.168.21.255, www.example.com")
 	flag.BoolVar(&useIcmp, "icmp", false, "是否确定进行icmp扫描")
-	flag.StringVar(&filePath, "ipf", "", "指定IP段文件路径")
+	flag.StringVar(&url, "u", "", "输入url地址，执行指纹识别，poc探测")
+	flag.StringVar(&port, "port", "top100", "输入需要扫描的端口,支持如下参数：full（全端口扫描）,top100（default）,top1000 ,HttPorts(常见http端口）,1-65535（自定义端口范围）")
+	flag.StringVar(&filePath, "hf", "", "指定需扫描的IP/域名/url 文件路径")
 	flag.StringVar(&outPut, "output", "output.txt", "导出扫描结果到指定文件")
 	flag.BoolVar(&silent, "silent", false, "是否输出结果至文件,默认不输出")
 	flag.Parse()
