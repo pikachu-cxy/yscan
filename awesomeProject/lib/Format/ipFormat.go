@@ -167,6 +167,26 @@ func IsDomainRange(domain string) bool {
 	matched, err := regexp.MatchString(pattern, domain)
 
 	if err != nil {
+		fmt.Println("域名正则匹配出错:", err)
+		return false
+	}
+
+	if matched {
+		//fmt.Println("域名匹配成功")
+		return true
+	} else {
+		fmt.Println("域名不匹配")
+		return false
+	}
+	return false
+}
+
+func IsUrl(url string) bool {
+	pattern := `[a-zA-z]+://[^\s]*` // 正则表达式模式
+
+	matched, err := regexp.MatchString(pattern, url)
+
+	if err != nil {
 		fmt.Println("正则匹配出错:", err)
 		return false
 	}
@@ -179,34 +199,39 @@ func IsDomainRange(domain string) bool {
 		return false
 	}
 	return false
+
 }
 
-func ChooseFormat(ip string) (s []string) {
+func ChooseFormat(ip string) (s []string, s2 string) {
 
 	p := make([]string, 0)
 	if ipFormat(ip) {
 		p = append(p, ip)
-		return p
+		return p, "ip"
 	}
 	ipscope, ipbool := IpCIDRFormat(ip)
 	if ipbool {
-		return ipscope
+		return ipscope, "ips"
 	}
 	ipscope, ipbool = IsIPRange(ip)
 	if ipbool {
-		return ipscope
+		return ipscope, "ips"
 	}
 	ips, ipbool1 := IsIPRange2(ip)
 	if ipbool1 {
 		ipscope, ipbool = IsIPRange(ips)
-		return ipscope
+		return ipscope, "ips"
 	}
 	if IsDomainRange(ip) {
 		p = append(p, ip)
-		return p
+		return p, "domain"
+	}
+	if IsUrl(ip) {
+		p = append(p, ip)
+		return p, "url"
 	}
 
-	return []string{}
+	return []string{}, ""
 }
 
 // 增加IP地址

@@ -1,9 +1,13 @@
 package exec
 
 import (
+	"awesomeProject/lib/File"
 	"fmt"
+	"net"
 	"strconv"
 	"strings"
+	"sync"
+	"time"
 )
 
 const portListStrParts = 2
@@ -18,7 +22,7 @@ const (
 
 func ParsePorts(option string) ([]int, error) {
 
-	portsMap := make(map[int]struct{})
+	portsMap := make([]int, 0)
 	var err error
 
 	switch strings.ToLower(option) {
@@ -29,15 +33,36 @@ func ParsePorts(option string) ([]int, error) {
 			return nil, fmt.Errorf("读取端口失败!: %s", err)
 		}
 	case "httports":
+		portsMap, err = ParsePortsList(HttPorts)
+		if err != nil {
 
+			return nil, fmt.Errorf("读取端口失败!: %s", err)
+		}
+	case "top100":
+		portsMap, err = ParsePortsList(Top100)
+		if err != nil {
+
+			return nil, fmt.Errorf("读取端口失败!: %s", err)
+		}
+	case "top1000":
+		portsMap, err = ParsePortsList(Top1000)
+		if err != nil {
+			return nil, fmt.Errorf("读取端口失败!: %s", err)
+		}
+	default:
+		portsMap, err = ParsePortsList(option)
+		if err != nil {
+
+			return nil, fmt.Errorf("读取端口失败!: %s", err)
+		}
 	}
 
 	return portsMap, nil
 
 }
 
-func ParsePortsList(data string) (map[int]struct{}, error) {
-	ports := make(map[int]struct{})
+func ParsePortsList(data string) ([]int, error) {
+	ports := make([]int, 0)
 	ranges := strings.Split(data, ",")
 	for _, r := range ranges {
 		r = strings.TrimSpace(r)
@@ -62,15 +87,46 @@ func ParsePortsList(data string) (map[int]struct{}, error) {
 			}
 
 			for i := p1; i <= p2; i++ {
-				ports[i] = struct{}{}
+				ports = append(ports, i)
 			}
 		} else {
 			port, err := strconv.Atoi(r)
 			if err != nil {
 				return nil, fmt.Errorf("invalid port number: '%s'", r)
 			}
-			ports[port] = struct{}{}
+			ports = append(ports, port)
 		}
 	}
 	return ports, nil
+}
+
+func ScanPort(portsMap []int, ip string) []string {
+
+	ads := make([]string, 0)
+	// 使用 WaitGroup 来等待所有协程完成
+	var wg sync.WaitGroup
+
+	// 循环启动协程进行端口扫描
+	for _, port := range portsMap {
+		wg.Add(1) // 增加 WaitGroup 的计数器
+
+		go func(port int) {
+			defer wg.Done() // 协程完成时减少 WaitGroup 的计数器
+
+			address := fmt.Sprintf("%s:%d", ip, port)
+			conn, err := net.DialTimeout("tcp", address, 2*time.Second)
+			if err == nil {
+				fmt.Printf("Port %d is open\n", port)
+				File.WriteFile(output, ip+":"+strconv.Itoa(port)+" is open\n")
+				//加入指纹识别逻辑 address
+				//对应指纹的poc探测
+
+				ads = append(ads, address)
+				conn.Close()
+			}
+		}(port)
+	}
+	// 等待所有协程完成
+	wg.Wait()
+	return ads
 }

@@ -61,6 +61,6 @@ func WriteFile(filename string, content string) error {
 		return err
 	}
 
-	fmt.Println("追加写入文件成功")
+	//fmt.Println("追加写入文件成功")
 	return nil
 }
