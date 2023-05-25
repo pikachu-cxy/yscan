@@ -6,8 +6,7 @@ import (
 	"awesomeProject/lib/exec"
 	"flag"
 	"fmt"
-	"net"
-	"strings"
+	_ "github.com/praetorian-inc/fingerprintx/pkg/plugins"
 	"time"
 )
 
@@ -19,7 +18,7 @@ func main() {
   ╚██╔╝  ╚════██║██║     ██╔══██║██║╚██╗██║
    ██║   ███████║╚██████╗██║  ██║██║ ╚████║
    ╚═╝   ╚══════╝ ╚═════╝╚═╝  ╚═╝╚═╝  ╚═══╝
-				     by cxy
+				by PikaChu
 --------------------------------------------
 `
 
@@ -48,14 +47,14 @@ func main() {
 	start := time.Now()
 	//如只在命令行输入资产，则认为扫描资产数量不大，仅在命令行输出扫描结果
 	if filePath == "" && host != "" {
-		choose(host, port)
+		Format.Choose(host, port, false)
 	}
 	if filePath != "" && host == "" {
 		File.CreateFile(outPut)
 		ips, _ := File.ReadIPRangesFromFile(filePath)
 		exec.OutputSet(outPut)
 		for _, host := range ips {
-			choose(host, port)
+			Format.Choose(host, port, true)
 		}
 	}
 
@@ -63,46 +62,5 @@ func main() {
 
 	//输出执行时间。
 	fmt.Println("扫描完成，共耗时: ", elapsed)
-}
 
-func choose(host string, port string) {
-	hosts, format := Format.ChooseFormat(host)
-	switch strings.ToLower(format) {
-	case "ip":
-		//先判断是内网环境/外网环境
-		//内网可以arp udp tcp http
-		host = hosts[0]
-		ip := net.ParseIP(host)
-		//内网地址
-		if ip.IsPrivate() {
-			//内网判断方法 arp,udp常用端口，http常用端口
-
-		} else {
-			//外网判断方法 udp常用端口，http常用端口
-
-		}
-		if exec.OnePing(host) {
-			portsMap, _ := exec.ParsePorts(port)
-			exec.ScanPort(portsMap, host)
-		}
-	case "ips":
-		//为了保证扫描效率，当无法ping通目标ip，则认为不存活
-		ipAlive := exec.IpIcmp(hosts)
-		portsMap, _ := exec.ParsePorts(port)
-		for _, host := range ipAlive {
-			exec.ScanPort(portsMap, host)
-		}
-
-	case "domain":
-		//爆破域名 深度扫描
-		//js爬取 深度扫描
-		host := hosts[0]
-		//如果对方禁ping 通过DNS解析判断存活
-		if exec.OnePing(host) || exec.DnsLookup(host) {
-			//todo
-		}
-
-	case "url":
-		//访问连通性--指纹识别--poc探测
-	}
 }

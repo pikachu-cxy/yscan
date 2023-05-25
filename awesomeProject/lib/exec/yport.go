@@ -100,7 +100,9 @@ func ParsePortsList(data string) ([]int, error) {
 	return ports, nil
 }
 
-func ScanPort(portsMap []int, ip string) []string {
+//connect扫描 保证准确性 后续添加syn
+
+func ScanPort(portsMap []int, ip string, w bool) []string {
 
 	ads := make([]string, 0)
 	// 使用 WaitGroup 来等待所有协程完成
@@ -114,10 +116,12 @@ func ScanPort(portsMap []int, ip string) []string {
 			defer wg.Done() // 协程完成时减少 WaitGroup 的计数器
 
 			address := fmt.Sprintf("%s:%d", ip, port)
-			conn, err := net.DialTimeout("tcp", address, 2*time.Second)
+			conn, err := net.DialTimeout("tcp", address, 1*time.Second)
 			if err == nil {
 				fmt.Printf("Port %d is open\n", port)
-				File.WriteFile(output, ip+":"+strconv.Itoa(port)+" is open\n")
+				if w {
+					File.WriteFile(output, ip+":"+strconv.Itoa(port)+" is open\n")
+				}
 				//加入指纹识别逻辑 address
 				//对应指纹的poc探测
 
@@ -129,4 +133,14 @@ func ScanPort(portsMap []int, ip string) []string {
 	// 等待所有协程完成
 	wg.Wait()
 	return ads
+}
+
+//syn scan
+func synScan() {
+
+}
+
+//udp scan
+func udpScan() {
+
 }

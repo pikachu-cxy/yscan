@@ -1,8 +1,14 @@
 package Format
 
 import (
+	"awesomeProject/lib/exec"
+	"awesomeProject/lib/pkg/internals/crackrunner"
+	_ "awesomeProject/lib/pkg/internals/crackrunner"
+	"awesomeProject/lib/pkg/runner"
 	"encoding/binary"
 	"fmt"
+	"github.com/praetorian-inc/fingerprintx/pkg/plugins"
+	"github.com/praetorian-inc/fingerprintx/pkg/scan"
 	"net"
 	"regexp"
 	"strconv"
@@ -241,5 +247,72 @@ func inc(ip net.IP) {
 		if ip[j] > 0 {
 			break
 		}
+	}
+}
+
+func Choose(host string, port string, w bool) {
+
+	hosts, format := ChooseFormat(host)
+	switch strings.ToLower(format) {
+	case "ip":
+		//先判断是内网环境/外网环境
+		//内网可以arp udp tcp http
+		host = hosts[0]
+		ip := net.ParseIP(host)
+		//内网地址
+		if ip.IsPrivate() {
+			//内网判断方法 arp,udp常用端口，http常用端口
+
+		} else {
+			//外网判断方法 udp常用端口，http常用端口
+
+		}
+		if exec.OnePing(host) {
+			portsMap, _ := exec.ParsePorts(port)
+			inputs := exec.ScanPort(portsMap, host, w)
+			//对系统端口进行指纹识别
+			targetsList := make([]plugins.Target, 0)
+			for _, input := range inputs {
+				parsedTarget, _ := runner.ParseTarget(input)
+				targetsList = append(targetsList, parsedTarget)
+			}
+			//fast模式 crackrunner.CreateScanConfigFast()
+			results, _ := scan.ScanTargets(targetsList, scan.Config(runner.CreateScanConfig()))
+			datas, _ := runner.Report(results)
+			for _, data := range datas {
+				println(data)
+				//对识别的端口服务（ssh，mysql等）进行爆破
+				options := &crackrunner.Options{Input: data, User: "root", Pass: "123456"}
+				newRunner, _ := crackrunner.NewRunner(options)
+				newRunner.Run()
+			}
+		}
+	case "ips":
+		//为了保证扫描效率，当无法ping通目标ip，则认为不存活
+		ipAlive := exec.IpIcmp(hosts)
+		portsMap, _ := exec.ParsePorts(port)
+		targetsList := make([]plugins.Target, 0)
+		for _, host := range ipAlive {
+			inputs := exec.ScanPort(portsMap, host, w)
+			for _, input := range inputs {
+				parsedTarget, _ := runner.ParseTarget(input)
+				targetsList = append(targetsList, parsedTarget)
+			}
+		}
+		//fast模式 crackrunner.CreateScanConfigFast()
+		results, _ := scan.ScanTargets(targetsList, scan.Config(runner.CreateScanConfigFast()))
+		runner.Report(results)
+
+	case "domain":
+		host := hosts[0]
+		//如果对方禁ping 通过DNS解析判断存活
+		if exec.OnePing(host) || exec.DnsLookup(host) {
+			//扫描端口
+		}
+		//爆破域名 深度扫描
+
+	case "url":
+		//访问连通性--指纹识别--poc探测
+		//js爬取 深度扫描
 	}
 }
