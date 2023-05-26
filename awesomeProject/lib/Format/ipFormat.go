@@ -2,6 +2,7 @@ package Format
 
 import (
 	"awesomeProject/lib/exec"
+	"awesomeProject/lib/pkg/crack"
 	"awesomeProject/lib/pkg/internals/crackrunner"
 	_ "awesomeProject/lib/pkg/internals/crackrunner"
 	"awesomeProject/lib/pkg/runner"
@@ -9,11 +10,23 @@ import (
 	"fmt"
 	"github.com/praetorian-inc/fingerprintx/pkg/plugins"
 	"github.com/praetorian-inc/fingerprintx/pkg/scan"
+	"github.com/projectdiscovery/gologger"
+	"github.com/tidwall/gjson"
 	"net"
 	"regexp"
 	"strconv"
 	"strings"
 )
+
+type service struct {
+	ip        string
+	port      string
+	protocol  int
+	tls       bool
+	transport string
+	version   string
+	metadata  []string
+}
 
 type IP interface {
 	readIP() ([]byte, error)
@@ -279,13 +292,7 @@ func Choose(host string, port string, w bool) {
 			//fast模式 crackrunner.CreateScanConfigFast()
 			results, _ := scan.ScanTargets(targetsList, scan.Config(runner.CreateScanConfig()))
 			datas, _ := runner.Report(results)
-			for _, data := range datas {
-				println(data)
-				//对识别的端口服务（ssh，mysql等）进行爆破
-				options := &crackrunner.Options{Input: data, User: "root", Pass: "123456"}
-				newRunner, _ := crackrunner.NewRunner(options)
-				newRunner.Run()
-			}
+			brute(datas)
 		}
 	case "ips":
 		//为了保证扫描效率，当无法ping通目标ip，则认为不存活
@@ -299,10 +306,11 @@ func Choose(host string, port string, w bool) {
 				targetsList = append(targetsList, parsedTarget)
 			}
 		}
+		println("正在进行指纹识别~ 请稍等------------------------------")
 		//fast模式 crackrunner.CreateScanConfigFast()
-		results, _ := scan.ScanTargets(targetsList, scan.Config(runner.CreateScanConfigFast()))
-		runner.Report(results)
-
+		results, _ := scan.ScanTargets(targetsList, scan.Config(runner.CreateScanConfig()))
+		datas, _ := runner.Report(results)
+		brute(datas)
 	case "domain":
 		host := hosts[0]
 		//如果对方禁ping 通过DNS解析判断存活
@@ -315,4 +323,48 @@ func Choose(host string, port string, w bool) {
 		//访问连通性--指纹识别--poc探测
 		//js爬取 深度扫描
 	}
+}
+
+func brute(datas []string) {
+	for _, data := range datas {
+		if strings.Contains(data, "Name") {
+			println(data)
+		}
+		//println(data)
+		// gjson解析指纹识别结果
+		ip := gjson.Get(data, "ip")
+		port := gjson.Get(data, "port")
+		protocol := gjson.Get(data, "protocol")
+		uri := ""
+		if crack.SupportProtocols[protocol.String()] {
+			//整理组合结果为127.0.0.1:3306|mysql 格式，传给crack
+			uri = ip.String() + ":" + port.String() + "|" + protocol.String()
+		} else {
+			continue
+		}
+		if protocol.String() == "http" {
+			webBruteforce()
+			webPoc()
+		}
+		// 输出结果
+		//fmt.Println(uri)
+		//密码爆破
+		options := crackrunner.Options{Input: uri}
+		//fmt.Printf("%v", options)
+		option := crackrunner.ParseOptions(&options)
+		//fmt.Printf("%v", option)
+		newRunner, err := crackrunner.NewRunner(option)
+		if err != nil {
+			gologger.Fatal().Msgf("Could not create runner: %v", err)
+		}
+		newRunner.Run()
+	}
+}
+
+func webBruteforce() {
+
+}
+
+func webPoc() {
+
 }

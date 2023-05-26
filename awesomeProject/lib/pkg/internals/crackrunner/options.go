@@ -4,7 +4,6 @@ import (
 	"awesomeProject/lib/pkg/internals/utils"
 	"encoding/json"
 	"fmt"
-	"github.com/projectdiscovery/goflags"
 	"github.com/projectdiscovery/gologger"
 	"github.com/projectdiscovery/gologger/formatter"
 	"github.com/projectdiscovery/gologger/levels"
@@ -37,44 +36,48 @@ type Options struct {
 	PassDict []string
 }
 
-func ParseOptions() *Options {
-	options := &Options{}
+func ParseOptions(options *Options) *Options {
+	//options := &Options{}
+	/*
+		flagSet := goflags.NewFlagSet()
+		flagSet.SetDescription(`Service cracker`)
 
-	flagSet := goflags.NewFlagSet()
-	flagSet.SetDescription(`Service cracker`)
+		flagSet.CreateGroup("input", "Input",
+			flagSet.StringVarP(&options.Input, "input", "i", "", "crack service input(example: -i '127.0.0.1:3306', -i '127.0.0.1:3307|mysql')"),
+			flagSet.StringVarP(&options.InputFile, "input-file", "f", "", "crack services file(example: -f 'xxx.txt')"),
+			flagSet.StringVarP(&options.Module, "module", "m", "all", "choose one module to crack(ftp,ssh,wmi,mssql,oracle,mysql,rdp,postgres,redis,memcached,mongodb)"),
+			flagSet.StringVar(&options.User, "user", "", "user(example: -user 'admin,root')"),
+			flagSet.StringVar(&options.Pass, "pass", "", "pass(example: -pass 'admin,root')"),
+			flagSet.StringVar(&options.UserFile, "user-file", "", "user file(example: -user-file 'user.txt')"),
+			flagSet.StringVar(&options.PassFile, "pass-file", "", "pass file(example: -pass-file 'pass.txt')"),
+		)
 
-	flagSet.CreateGroup("input", "Input",
-		flagSet.StringVarP(&options.Input, "input", "i", "", "crack service input(example: -i '127.0.0.1:3306', -i '127.0.0.1:3307|mysql')"),
-		flagSet.StringVarP(&options.InputFile, "input-file", "f", "", "crack services file(example: -f 'xxx.txt')"),
-		flagSet.StringVarP(&options.Module, "module", "m", "all", "choose one module to crack(ftp,ssh,wmi,mssql,oracle,mysql,rdp,postgres,redis,memcached,mongodb)"),
-		flagSet.StringVar(&options.User, "user", "", "user(example: -user 'admin,root')"),
-		flagSet.StringVar(&options.Pass, "pass", "", "pass(example: -pass 'admin,root')"),
-		flagSet.StringVar(&options.UserFile, "user-file", "", "user file(example: -user-file 'user.txt')"),
-		flagSet.StringVar(&options.PassFile, "pass-file", "", "pass file(example: -pass-file 'pass.txt')"),
-	)
+		flagSet.CreateGroup("config", "Config",
+			flagSet.IntVar(&options.Threads, "threads", 1, "number of threads"),
+			flagSet.IntVar(&options.Timeout, "timeout", 10, "timeout in seconds"),
+			flagSet.IntVar(&options.Delay, "delay", 0, "delay between requests in seconds (0 to disable)"),
+			flagSet.BoolVarP(&options.CrackAll, "crack-all", "", false, "crack all user:pass"),
+		)
 
-	flagSet.CreateGroup("config", "Config",
-		flagSet.IntVar(&options.Threads, "threads", 1, "number of threads"),
-		flagSet.IntVar(&options.Timeout, "timeout", 10, "timeout in seconds"),
-		flagSet.IntVar(&options.Delay, "delay", 0, "delay between requests in seconds (0 to disable)"),
-		flagSet.BoolVarP(&options.CrackAll, "crack-all", "", false, "crack all user:pass"),
-	)
+		flagSet.CreateGroup("output", "Output",
+			flagSet.StringVarP(&options.OutputFile, "output", "o", "crack.txt", "output file to write found results"),
+			flagSet.BoolVarP(&options.NoColor, "no-color", "nc", false, "disable colors in output"),
+		)
 
-	flagSet.CreateGroup("output", "Output",
-		flagSet.StringVarP(&options.OutputFile, "output", "o", "crack.txt", "output file to write found results"),
-		flagSet.BoolVarP(&options.NoColor, "no-color", "nc", false, "disable colors in output"),
-	)
+		flagSet.CreateGroup("debug", "Debug",
+			flagSet.BoolVar(&options.Silent, "silent", false, "show only results in output"),
+			flagSet.BoolVar(&options.Debug, "debug", false, "show debug output"),
+		)
 
-	flagSet.CreateGroup("debug", "Debug",
-		flagSet.BoolVar(&options.Silent, "silent", false, "show only results in output"),
-		flagSet.BoolVar(&options.Debug, "debug", false, "show debug output"),
-	)
 
-	if err := flagSet.Parse(); err != nil {
-		gologger.Fatal().Msgf("Program exiting: %v", err)
-	}
 
-	options.configureOutput()
+		if err := flagSet.Parse(); err != nil {
+			gologger.Fatal().Msgf("Program exiting: %v", err)
+		}
+
+	*/
+
+	//options.configureOutput()
 
 	//showBanner()
 
@@ -82,7 +85,7 @@ func ParseOptions() *Options {
 		gologger.Fatal().Msgf("Program exiting: %v", err)
 	}
 
-	if err := options.configureOptions(); err != nil {
+	if err := options.ConfigureOptions(); err != nil {
 		gologger.Fatal().Msgf("Program exiting: %v", err)
 	}
 
@@ -127,8 +130,8 @@ func (o *Options) validateOptions() error {
 	return nil
 }
 
-// configureOptions 配置选项
-func (o *Options) configureOptions() error {
+// ConfigureOptions 配置选项
+func (o *Options) ConfigureOptions() error {
 	var err error
 	if o.Input != "" {
 		o.Targets = append(o.Targets, o.Input)

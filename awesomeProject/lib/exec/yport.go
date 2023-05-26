@@ -118,7 +118,7 @@ func ScanPort(portsMap []int, ip string, w bool) []string {
 			address := fmt.Sprintf("%s:%d", ip, port)
 			conn, err := net.DialTimeout("tcp", address, 1*time.Second)
 			if err == nil {
-				fmt.Printf("Port %d is open\n", port)
+				fmt.Printf("%s:%d is open\n", ip, port)
 				if w {
 					File.WriteFile(output, ip+":"+strconv.Itoa(port)+" is open\n")
 				}

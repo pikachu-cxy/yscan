@@ -13,11 +13,11 @@ type Runner struct {
 
 func NewRunner(options *Options) (*Runner, error) {
 	crackOptions := &crack.Options{
-		Threads:  options.Threads,
-		Timeout:  options.Timeout,
-		Delay:    options.Delay,
-		CrackAll: options.CrackAll,
-		Silent:   options.Silent,
+		Threads:  1,
+		Timeout:  1,
+		Delay:    0,
+		CrackAll: false,
+		Silent:   false,
 	}
 	crackRunner, err := crack.NewRunner(crackOptions)
 	if err != nil {
@@ -32,21 +32,24 @@ func NewRunner(options *Options) (*Runner, error) {
 func (r *Runner) Run() {
 	// 解析目标
 	addrs := crack.ParseTargets(r.options.Targets)
-	addrs = crack.FilterModule(addrs, r.options.Module)
+
+	//addrs = crack.FilterModule(addrs, r.options.Module)
+	addrs = crack.FilterModule(addrs, "all")
 	if len(addrs) == 0 {
 		gologger.Info().Msgf("目标为空")
 		return
 	}
 	// 存活探测
-	gologger.Info().Msgf("存活探测")
+	//gologger.Info().Msgf("存活探测")
 	addrs = r.crackRunner.CheckAlive(addrs)
-	gologger.Info().Msgf("存活数量: %v", len(addrs))
+	//gologger.Info().Msgf("存活数量: %v", len(addrs))
+
 	// 服务爆破
 	results := r.crackRunner.Run(addrs, r.options.UserDict, r.options.PassDict)
 	if len(results) > 0 {
 		gologger.Info().Msgf("爆破成功: %v", len(results))
 		for _, result := range results {
-			gologger.Print().Msgf("%v -> %v %v", result.Protocol, result.Addr, result.UserPass)
+			gologger.Print().Msgf("[+]%v -> %v %v", result.Protocol, result.Addr, result.UserPass)
 		}
 	}
 }
