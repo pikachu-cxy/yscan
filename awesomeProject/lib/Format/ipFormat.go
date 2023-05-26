@@ -293,7 +293,8 @@ func Choose(host string, port string, w bool) {
 			//fast模式 crackrunner.CreateScanConfigFast()
 			results, _ := scan.ScanTargets(targetsList, scan.Config(runner.CreateScanConfig()))
 			datas, _ := runner.Report(results)
-			brute(datas, "", "")
+			//可以设置为”“ 则使用默认字典爆破
+			brute(datas, "user.txt", "pass.txt")
 
 		}
 	case "ips":
@@ -312,7 +313,7 @@ func Choose(host string, port string, w bool) {
 		//fast模式 crackrunner.CreateScanConfigFast()
 		results, _ := scan.ScanTargets(targetsList, scan.Config(runner.CreateScanConfig()))
 		datas, _ := runner.Report(results)
-		brute(datas, "", "")
+		brute(datas, "user.txt", "pass.txt")
 
 	case "domain":
 		host := hosts[0]
