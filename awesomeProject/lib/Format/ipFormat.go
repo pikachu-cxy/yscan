@@ -264,7 +264,7 @@ func inc(ip net.IP) {
 	}
 }
 
-func Choose(host string, port string, w bool) {
+func Choose(host string, port string, w bool, dict bool) {
 	hosts, format := ChooseFormat(host)
 	switch strings.ToLower(format) {
 	case "ip":
@@ -294,7 +294,11 @@ func Choose(host string, port string, w bool) {
 			results, _ := scan.ScanTargets(targetsList, scan.Config(runner.CreateScanConfig()))
 			datas, _ := runner.Report(results)
 			//可以设置为”“ 则使用默认字典爆破
-			brute(datas, "user.txt", "pass.txt")
+			if dict {
+				brute(datas, "user.txt", "pass.txt")
+			} else {
+				brute(datas, "", "")
+			}
 
 		}
 	case "ips":
@@ -313,7 +317,11 @@ func Choose(host string, port string, w bool) {
 		//fast模式 crackrunner.CreateScanConfigFast()
 		results, _ := scan.ScanTargets(targetsList, scan.Config(runner.CreateScanConfig()))
 		datas, _ := runner.Report(results)
-		brute(datas, "user.txt", "pass.txt")
+		if dict {
+			brute(datas, "user.txt", "pass.txt")
+		} else {
+			brute(datas, "", "")
+		}
 
 	case "domain":
 		host := hosts[0]

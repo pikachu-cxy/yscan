@@ -31,6 +31,7 @@ func main() {
 		//silent   bool
 		//url      string
 		port string
+		dict bool
 	)
 	// 定义命令行参数
 	flag.StringVar(&host, "host", "", "输入IP/域名/url地址，格式支持：192.168.21.1/24, 192.168.21.1-255, 192.168.21.1-192.168.21.255, www.example.com,http://www.example.com")
@@ -39,6 +40,7 @@ func main() {
 	flag.StringVar(&port, "port", "top100", "输入需要扫描的端口,支持如下参数：full（全端口扫描）,top100,top1000 ,HttPorts(常见http端口）,1-65535（自定义端口范围）")
 	flag.StringVar(&filePath, "hf", "", "指定需扫描的IP/域名/url 文件路径")
 	flag.StringVar(&outPut, "output", "output.txt", "导出扫描结果到指定文件")
+	flag.BoolVar(&dict, "dict", false, "是否使用字典密码本进行爆破，默认使用程序内置账户密码")
 	//flag.BoolVar(&silent, "silent", false, "是否输出结果至文件,默认不输出")
 	flag.Parse()
 
@@ -47,14 +49,14 @@ func main() {
 	start := time.Now()
 	//如只在命令行输入资产，则认为扫描资产数量不大，仅在命令行输出扫描结果
 	if filePath == "" && host != "" {
-		Format.Choose(host, port, false)
+		Format.Choose(host, port, false, dict)
 	}
 	if filePath != "" && host == "" {
 		File.CreateFile(outPut)
 		ips, _ := File.ReadIPRangesFromFile(filePath)
 		exec.OutputSet(outPut)
 		for _, host := range ips {
-			Format.Choose(host, port, true)
+			Format.Choose(host, port, true, dict)
 		}
 	}
 
