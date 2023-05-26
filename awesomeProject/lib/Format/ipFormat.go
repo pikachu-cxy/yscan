@@ -8,6 +8,7 @@ import (
 	"awesomeProject/lib/pkg/runner"
 	"encoding/binary"
 	"fmt"
+	crack2 "github.com/niudaii/crack/pkg/crack"
 	"github.com/praetorian-inc/fingerprintx/pkg/plugins"
 	"github.com/praetorian-inc/fingerprintx/pkg/scan"
 	"github.com/projectdiscovery/gologger"
@@ -264,7 +265,6 @@ func inc(ip net.IP) {
 }
 
 func Choose(host string, port string, w bool) {
-
 	hosts, format := ChooseFormat(host)
 	switch strings.ToLower(format) {
 	case "ip":
@@ -289,10 +289,12 @@ func Choose(host string, port string, w bool) {
 				parsedTarget, _ := runner.ParseTarget(input)
 				targetsList = append(targetsList, parsedTarget)
 			}
+			println("正在进行指纹识别~ 请稍等------------------------------")
 			//fast模式 crackrunner.CreateScanConfigFast()
 			results, _ := scan.ScanTargets(targetsList, scan.Config(runner.CreateScanConfig()))
 			datas, _ := runner.Report(results)
-			brute(datas)
+			brute(datas, "", "")
+
 		}
 	case "ips":
 		//为了保证扫描效率，当无法ping通目标ip，则认为不存活
@@ -310,7 +312,8 @@ func Choose(host string, port string, w bool) {
 		//fast模式 crackrunner.CreateScanConfigFast()
 		results, _ := scan.ScanTargets(targetsList, scan.Config(runner.CreateScanConfig()))
 		datas, _ := runner.Report(results)
-		brute(datas)
+		brute(datas, "", "")
+
 	case "domain":
 		host := hosts[0]
 		//如果对方禁ping 通过DNS解析判断存活
@@ -325,7 +328,7 @@ func Choose(host string, port string, w bool) {
 	}
 }
 
-func brute(datas []string) {
+func brute(datas []string, userDict string, passDict string) {
 	for _, data := range datas {
 		if strings.Contains(data, "Name") {
 			println(data)
@@ -346,19 +349,30 @@ func brute(datas []string) {
 			webBruteforce()
 			webPoc()
 		}
-		// 输出结果
-		//fmt.Println(uri)
-		//密码爆破
-		options := crackrunner.Options{Input: uri}
+		//密码爆破 指纹识别到单个结果 即开始爆破
+		options := crackrunner.Options{Input: uri, UserFile: userDict, PassFile: passDict}
 		//fmt.Printf("%v", options)
 		option := crackrunner.ParseOptions(&options)
 		//fmt.Printf("%v", option)
-		newRunner, err := crackrunner.NewRunner(option)
+		//设置爆破参数 线程 超时
+		crackOptions := setOptions(20, 1)
+		newRunner, err := crackrunner.NewRunner(option, crack2.Options(crackOptions))
 		if err != nil {
 			gologger.Fatal().Msgf("Could not create runner: %v", err)
 		}
-		newRunner.Run()
+		newRunner.Run(protocol.String())
 	}
+}
+
+func setOptions(thread int, timeout int) crack.Options {
+	crackOptions := crack.Options{
+		Threads:  thread,
+		Timeout:  timeout,
+		Delay:    0,
+		CrackAll: false,
+		Silent:   false,
+	}
+	return crackOptions
 }
 
 func webBruteforce() {

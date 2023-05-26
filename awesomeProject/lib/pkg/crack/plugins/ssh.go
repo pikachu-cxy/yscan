@@ -28,7 +28,7 @@ func SshCrack(serv *Service) int {
 	}
 	defer client.Close()
 	session, err := client.NewSession()
-	errRet := session.Run("echo zp857")
+	errRet := session.Run("echo 123456")
 	if err != nil || errRet != nil {
 		return CrackFail
 	}

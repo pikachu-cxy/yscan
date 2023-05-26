@@ -35,6 +35,7 @@ const (
 
 func Report(services []plugins.Service) ([]string, error) {
 	var writeFile *os.File
+	//mysql://127.0.0.1:3306  default
 	var outputFormat = JSON
 	var csvWriter *csv.Writer
 	var err error
