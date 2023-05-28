@@ -265,7 +265,7 @@ type Options struct {
 }
 
 // ParseOptions parses the command line options for application
-func ParseOptions(uri goflags.StringSlice, output string) *Options {
+func ParseOptions(uri goflags.StringSlice, output string, path string) *Options {
 	options := &Options{}
 	//options := &Options{InputFile: uri, ExtractTitle: true, TechDetect: true, StatusCode: true, Silent: false}
 	/*
@@ -447,7 +447,7 @@ func ParseOptions(uri goflags.StringSlice, output string) *Options {
 	options.OutputIP = false
 	options.OutputCName = false
 	options.Asn = false
-	options.OutputCDN = true
+	options.OutputCDN = false
 	options.Probe = false
 	options.OutputMatchStatusCode = ""
 	options.OutputMatchContentLength = ""
@@ -469,7 +469,7 @@ func ParseOptions(uri goflags.StringSlice, output string) *Options {
 	options.RateLimitMinute = 0
 	options.ProbeAllIPS = false
 	options.CustomPorts = nil
-	options.RequestURIs = "path.txt"
+	options.RequestURIs = path
 	options.TLSProbe = false
 	options.CSPProbe = false
 	options.TLSGrab = false
@@ -491,7 +491,7 @@ func ParseOptions(uri goflags.StringSlice, output string) *Options {
 	options.CustomHeaders = nil
 	options.HTTPProxy = ""
 	options.Unsafe = false
-	options.Resume = false
+	options.Resume = true
 	options.FollowRedirects = true
 	options.MaxRedirects = 10
 	options.FollowHostRedirects = false

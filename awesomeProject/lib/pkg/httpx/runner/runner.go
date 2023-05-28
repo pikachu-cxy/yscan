@@ -630,6 +630,7 @@ func (r *Runner) RunEnumeration() {
 			}
 			defer f.Close() //nolint
 		}
+
 		if r.options.CSVOutput {
 			outEncoding := strings.ToLower(r.options.CSVOutputEncoding)
 			switch outEncoding {
@@ -856,27 +857,49 @@ func (r *Runner) RunEnumeration() {
 				row = resp.CSVRow(&r.scanopts)
 
 			}
-
-			//输出结果显示  排除404和400
-			rows := strings.Split(row, "")
-
-			if strings.Contains(rows[1], "200") {
+			if r.options.requestURIs == nil {
 				gologger.Silent().Msgf("%s\n", row)
-			} else if strings.Contains(rows[1], "302") {
-				gologger.Silent().Msgf("%s\n", row)
-			}
-			//gologger.Silent().Msgf("%s\n", row)
+				err := File.WriteFile(r.options.Output, row+"\n")
+				if err != nil {
+					return
+				}
+			} else {
 
-			if f != nil {
-				if strings.Contains(rows[1], "200") {
+				//gologger.Silent().Msgf("%s\n", row)
+				//输出结果显示  排除404和400
+
+				rows := strings.Split(row, " ")
+
+				if strings.Contains(rows[1], "400") || strings.Contains(rows[1], "404") {
 					//nolint:errcheck // this method needs a small refactor to reduce complexity
-					File.WriteFile(r.options.Output, row+"\n")
 					//f.WriteString(row + "\n")
-				} else if strings.Contains(rows[1], "302") {
-					File.WriteFile(r.options.Output, row+"\n")
+
+				} else {
+					gologger.Silent().Msgf("%s\n", row)
+					err := File.WriteFile(r.options.Output, row+"\n")
+					if err != nil {
+						return
+					}
+				}
+
+			}
+			/*
+				if f != nil {
+					if strings.Contains(rows[1], "400") || strings.Contains(rows[1], "404") {
+						//nolint:errcheck // this method needs a small refactor to reduce complexity
+						//f.WriteString(row + "\n")
+
+					} else {
+						//f.WriteString(row + "\n")
+						err := File.WriteFile(r.options.Output, row+"\n")
+						if err != nil {
+							return
+						}
+					}
 					//f.WriteString(row + "\n")
 				}
-			}
+
+			*/
 		}
 	}(output)
 

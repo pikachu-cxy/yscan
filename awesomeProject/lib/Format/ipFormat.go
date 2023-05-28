@@ -267,7 +267,7 @@ func inc(ip net.IP) {
 	}
 }
 
-func Choose(host string, port string, w bool, dict bool, o string) {
+func Choose(host string, port string, w bool, dict bool, o string, path bool) {
 	hosts, format := ChooseFormat(host)
 	switch strings.ToLower(format) {
 	case "ip":
@@ -292,15 +292,26 @@ func Choose(host string, port string, w bool, dict bool, o string) {
 				parsedTarget, _ := runner.ParseTarget(input)
 				targetsList = append(targetsList, parsedTarget)
 			}
-			println("正在进行指纹识别~ 请稍等------------------------------")
+			println("正在进行web指纹识别~ 请稍等------------------------------")
 			for _, input := range inputs {
 				//排除了404和400状态码显示
 				checkData(input, o)
 			}
+			if path {
+
+				for _, input := range inputs {
+					urls := make([]string, 0)
+					urls = append(urls, input)
+					//排除了404和400状态码显示
+					httpRunnerBrute(urls, o, "path.txt")
+				}
+			}
+
 			//fast模式 crackrunner.CreateScanConfigFast()
 			results, _ := scan.ScanTargets(targetsList, scan.Config(runner.CreateScanConfig()))
 			datas, _ := runner.Report(results)
 			//可以设置为”“ 则使用默认字典爆破
+
 			if dict {
 				brute(datas, "user.txt", "pass.txt")
 			} else {
@@ -326,7 +337,16 @@ func Choose(host string, port string, w bool, dict bool, o string) {
 		for _, input := range inputss {
 			checkData(input, o)
 		}
-		println("正在进行指纹识别~ 请稍等------------------------------")
+		if path {
+
+			for _, input := range inputss {
+				urls := make([]string, 0)
+				urls = append(urls, input)
+				//排除了404和400状态码显示
+				httpRunnerBrute(urls, o, "path.txt")
+			}
+		}
+		println("正在进行系统端口指纹识别~ 请稍等------------------------------")
 		//fast模式 crackrunner.CreateScanConfigFast()
 		results, _ := scan.ScanTargets(targetsList, scan.Config(runner.CreateScanConfig()))
 		runner.Report(results)
@@ -357,6 +377,14 @@ func Choose(host string, port string, w bool, dict bool, o string) {
 				println(data)
 			}
 			checkData(host, o)
+			if path {
+				for _, input := range inputs {
+					urls := make([]string, 0)
+					urls = append(urls, input)
+					//排除了404和400状态码显示
+					httpRunnerBrute(urls, o, "path.txt")
+				}
+			}
 		}
 		//爆破域名 深度扫描
 
@@ -364,6 +392,14 @@ func Choose(host string, port string, w bool, dict bool, o string) {
 		//访问连通性--指纹识别--poc探测
 		//js爬取 深度扫描
 		httpRunner(hosts, o)
+		if path {
+
+			urls := make([]string, 0)
+			urls = append(urls, host)
+			//排除了404和400状态码显示
+			httpRunnerBrute(urls, o, "path.txt")
+		}
+
 	}
 }
 
@@ -378,7 +414,15 @@ func checkData(data string, o string) {
 }
 
 func httpRunner(hosts []string, o string) {
-	options := httpxrunner.ParseOptions(hosts, o)
+	options := httpxrunner.ParseOptions(hosts, o, "")
+	//println(options)
+	httpxRunner, _ := httpxrunner.New(options)
+	httpxRunner.RunEnumeration()
+	httpxRunner.Close()
+}
+
+func httpRunnerBrute(hosts []string, o string, path string) {
+	options := httpxrunner.ParseOptions(hosts, o, path)
 	//println(options)
 	httpxRunner, _ := httpxrunner.New(options)
 	httpxRunner.RunEnumeration()
