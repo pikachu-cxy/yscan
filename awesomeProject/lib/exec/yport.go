@@ -102,7 +102,7 @@ func ParsePortsList(data string) ([]int, error) {
 
 //connect扫描 保证准确性 后续添加syn
 
-func ScanPort(portsMap []int, ip string, w bool) []string {
+func ScanPort(portsMap []int, ip string, w bool, output string) []string {
 
 	ads := make([]string, 0)
 	// 使用 WaitGroup 来等待所有协程完成
@@ -135,12 +135,12 @@ func ScanPort(portsMap []int, ip string, w bool) []string {
 	return ads
 }
 
-//syn scan
+// syn scan
 func synScan() {
 
 }
 
-//udp scan
+// udp scan
 func udpScan() {
 
 }

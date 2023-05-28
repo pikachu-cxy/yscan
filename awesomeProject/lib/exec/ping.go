@@ -1,6 +1,7 @@
 package exec
 
 import (
+	"awesomeProject/lib/File"
 	"fmt"
 	"net"
 	"os/exec"
@@ -19,7 +20,7 @@ var ipAlive []string
 func OutputSet(output1 string) {
 	output = output1
 }
-func OnePing(host string) bool {
+func OnePing(host string, output string) bool {
 	var cmd *exec.Cmd
 	switch runtime.GOOS {
 	case "windows":
@@ -42,12 +43,13 @@ func OnePing(host string) bool {
 		fmt.Printf("%s is can't connect！\n", host)
 		return false
 	} else {
+		File.WriteFile(output, host+"  is alive!\n")
 		fmt.Printf("%s is alive！\n", host)
 	}
 	return true
 }
 
-func somePing(host string, wg *sync.WaitGroup) {
+func somePing(host string, wg *sync.WaitGroup, output string) {
 	defer wg.Done()
 	var cmd *exec.Cmd
 	switch runtime.GOOS {
@@ -72,19 +74,19 @@ func somePing(host string, wg *sync.WaitGroup) {
 	} else {
 		number++
 		ipAlive = append(ipAlive, host)
-		//File.WriteFile(output, host+"  is alive!\n")
+		File.WriteFile(output, host+"  is alive!\n")
 		fmt.Printf("%s is alive！\n", host)
 	}
 }
 
-func IpIcmp(ips []string) []string {
+func IpIcmp(ips []string, o string) []string {
 	ipAlive = []string{}
 	var wg sync.WaitGroup
 	number = 0
 	if ips != nil {
 		for _, v := range ips {
 			wg.Add(1)
-			go somePing(v, &wg)
+			go somePing(v, &wg, o)
 		}
 		wg.Wait()
 		fmt.Printf("ip段存活ip数量为：" + strconv.Itoa(number) + "\n")
@@ -95,14 +97,14 @@ func IpIcmp(ips []string) []string {
 	return ipAlive
 }
 
-func DomainIcmp(ips []string) []string {
+func DomainIcmp(ips []string, o string) []string {
 	ipAlive = []string{}
 	var wg sync.WaitGroup
 	number = 0
 	if ips != nil {
 		for _, v := range ips {
 			wg.Add(1)
-			go OnePing(v)
+			go OnePing(v, o)
 		}
 		wg.Wait()
 		//File.WriteFile(output, "段存活ip数量为："+strconv.Itoa(number)+"\n")
@@ -121,7 +123,7 @@ func DnsLookup(host string) bool {
 	return true
 }
 
-//内网arp探测
+// 内网arp探测
 func arpConn(targetIPs []string) {
 
 }

@@ -40,7 +40,7 @@ func Report(services []plugins.Service) ([]string, error) {
 	var csvWriter *csv.Writer
 	var err error
 
-	log.SetFlags(0)
+	//log.SetFlags(1)
 
 	if len(config.outputFile) > 0 {
 		var fileErr error
@@ -79,7 +79,7 @@ func Report(services []plugins.Service) ([]string, error) {
 				return nil, err
 			}
 			//return string(data), nil
-			//log.Println(string(data))
+			log.Println(string(data))
 		case CSV:
 			portStr := strconv.FormatInt(int64(service.Port), 10)
 			err = csvWriter.Write([]string{service.Host, service.IP, portStr, service.Protocol,

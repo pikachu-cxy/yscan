@@ -3,7 +3,6 @@ package main
 import (
 	"awesomeProject/lib/File"
 	"awesomeProject/lib/Format"
-	"awesomeProject/lib/exec"
 	"flag"
 	"fmt"
 	_ "github.com/praetorian-inc/fingerprintx/pkg/plugins"
@@ -49,14 +48,17 @@ func main() {
 	start := time.Now()
 	//如只在命令行输入资产，则认为扫描资产数量不大，仅在命令行输出扫描结果
 	if filePath == "" && host != "" {
-		Format.Choose(host, port, false, dict)
+		File.CreateFile(outPut)
+		//exec.OutputSet(outPut)
+		Format.Choose(host, port, true, dict, outPut)
 	}
 	if filePath != "" && host == "" {
 		File.CreateFile(outPut)
 		ips, _ := File.ReadIPRangesFromFile(filePath)
-		exec.OutputSet(outPut)
+		//exec.OutputSet(outPut)
 		for _, host := range ips {
-			Format.Choose(host, port, true, dict)
+			//choose 一次只读取一条资产
+			Format.Choose(host, port, true, dict, outPut)
 		}
 	}
 

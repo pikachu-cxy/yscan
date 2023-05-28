@@ -3,15 +3,18 @@ package Format
 import (
 	"awesomeProject/lib/exec"
 	"awesomeProject/lib/pkg/crack"
+	httpxrunner "awesomeProject/lib/pkg/httpx/runner"
 	"awesomeProject/lib/pkg/internals/crackrunner"
 	_ "awesomeProject/lib/pkg/internals/crackrunner"
 	"awesomeProject/lib/pkg/runner"
+	"awesomeProject/lib/pkg/scan"
 	"encoding/binary"
 	"fmt"
 	crack2 "github.com/niudaii/crack/pkg/crack"
 	"github.com/praetorian-inc/fingerprintx/pkg/plugins"
-	"github.com/praetorian-inc/fingerprintx/pkg/scan"
+	_ "github.com/projectdiscovery/goflags"
 	"github.com/projectdiscovery/gologger"
+	_ "github.com/projectdiscovery/utils/slice"
 	"github.com/tidwall/gjson"
 	"net"
 	"regexp"
@@ -57,7 +60,7 @@ func IpCIDRFormat(host string) ([]string, bool) {
 	return ipList, true
 }
 
-//ipFormat 判断ip格式
+// ipFormat 判断ip格式
 func ipFormat(host string) bool {
 	pattern := `^(\d{1,3}\.){3}\d{1,3}$`
 
@@ -93,7 +96,7 @@ func IsIPRange2(s string) (string, bool) {
 	return ip, IpCompare(parts[0], ip2)
 }
 
-//192.168.21.1-192.168.21.255
+// 192.168.21.1-192.168.21.255
 func IsIPRange(s string) ([]string, bool) {
 
 	// 以连字符分割字符串，判断是否有两个 IP 地址
@@ -129,7 +132,7 @@ func IsIPRange(s string) ([]string, bool) {
 
 }
 
-//比对两个ip地址是否按顺序大小输入 如192.168.1.1 < 192.168.1.2
+// 比对两个ip地址是否按顺序大小输入 如192.168.1.1 < 192.168.1.2
 func IpCompare(ip1 string, ip2 string) bool {
 
 	// 将 IP 地址转换为整数
@@ -151,7 +154,7 @@ func IpCompare(ip1 string, ip2 string) bool {
 
 }
 
-//将ip地址转化为整数
+// 将ip地址转化为整数
 func ipToInt(ip string) uint32 {
 	parts := strings.Split(ip, ".")
 	a, _ := strconv.Atoi(parts[0])
@@ -195,7 +198,7 @@ func IsDomainRange(domain string) bool {
 		//fmt.Println("域名匹配成功")
 		return true
 	} else {
-		fmt.Println("域名不匹配")
+		//fmt.Println("域名不匹配")
 		return false
 	}
 	return false
@@ -212,10 +215,10 @@ func IsUrl(url string) bool {
 	}
 
 	if matched {
-		fmt.Println("域名匹配成功")
+		//fmt.Println("url匹配成功")
 		return true
 	} else {
-		fmt.Println("域名不匹配")
+		//fmt.Println("url不匹配")
 		return false
 	}
 	return false
@@ -264,7 +267,7 @@ func inc(ip net.IP) {
 	}
 }
 
-func Choose(host string, port string, w bool, dict bool) {
+func Choose(host string, port string, w bool, dict bool, o string) {
 	hosts, format := ChooseFormat(host)
 	switch strings.ToLower(format) {
 	case "ip":
@@ -280,9 +283,9 @@ func Choose(host string, port string, w bool, dict bool) {
 			//外网判断方法 udp常用端口，http常用端口
 
 		}
-		if exec.OnePing(host) {
+		if exec.OnePing(host, o) {
 			portsMap, _ := exec.ParsePorts(port)
-			inputs := exec.ScanPort(portsMap, host, w)
+			inputs := exec.ScanPort(portsMap, host, w, o)
 			//对系统端口进行指纹识别
 			targetsList := make([]plugins.Target, 0)
 			for _, input := range inputs {
@@ -290,6 +293,10 @@ func Choose(host string, port string, w bool, dict bool) {
 				targetsList = append(targetsList, parsedTarget)
 			}
 			println("正在进行指纹识别~ 请稍等------------------------------")
+			for _, input := range inputs {
+				//排除了404和400状态码显示
+				checkData(input, o)
+			}
 			//fast模式 crackrunner.CreateScanConfigFast()
 			results, _ := scan.ScanTargets(targetsList, scan.Config(runner.CreateScanConfig()))
 			datas, _ := runner.Report(results)
@@ -299,72 +306,116 @@ func Choose(host string, port string, w bool, dict bool) {
 			} else {
 				brute(datas, "", "")
 			}
-
 		}
 	case "ips":
 		//为了保证扫描效率，当无法ping通目标ip，则认为不存活
-		ipAlive := exec.IpIcmp(hosts)
+		ipAlive := exec.IpIcmp(hosts, o)
 		portsMap, _ := exec.ParsePorts(port)
 		targetsList := make([]plugins.Target, 0)
+		inputss := make([]string, 0)
 		for _, host := range ipAlive {
-			inputs := exec.ScanPort(portsMap, host, w)
+			inputs := exec.ScanPort(portsMap, host, w, o)
+			//finger识别开始
 			for _, input := range inputs {
+				inputss = append(inputss, input)
+				//println(input)
 				parsedTarget, _ := runner.ParseTarget(input)
 				targetsList = append(targetsList, parsedTarget)
 			}
 		}
+		for _, input := range inputss {
+			checkData(input, o)
+		}
 		println("正在进行指纹识别~ 请稍等------------------------------")
 		//fast模式 crackrunner.CreateScanConfigFast()
 		results, _ := scan.ScanTargets(targetsList, scan.Config(runner.CreateScanConfig()))
-		datas, _ := runner.Report(results)
-		if dict {
-			brute(datas, "user.txt", "pass.txt")
-		} else {
-			brute(datas, "", "")
-		}
-
+		runner.Report(results)
+		//datas, _ := runner.Report(results)
+		/*
+			if dict {
+				brute(datas, "user.txt", "pass.txt")
+			} else {
+				brute(datas, "", "")
+			}*/
 	case "domain":
 		host := hosts[0]
 		//如果对方禁ping 通过DNS解析判断存活
-		if exec.OnePing(host) || exec.DnsLookup(host) {
+		if exec.OnePing(host, o) || exec.DnsLookup(host) {
 			//扫描端口
+			portsMap, _ := exec.ParsePorts(port)
+			targetsList := make([]plugins.Target, 0)
+			//input 格式www.baidu.com:110
+			inputs := exec.ScanPort(portsMap, host, w, o)
+			for _, input := range inputs {
+				parsedTarget, _ := runner.ParseTarget(input)
+				targetsList = append(targetsList, parsedTarget)
+			}
+			//http 指纹识别所需时间较长 1*time.Millisecond 不足
+			results, _ := scan.ScanTargets(targetsList, scan.Config(runner.CreateScanConfigFast()))
+			datas, _ := runner.Report(results)
+			for _, data := range datas {
+				println(data)
+			}
+			checkData(host, o)
 		}
 		//爆破域名 深度扫描
 
 	case "url":
 		//访问连通性--指纹识别--poc探测
 		//js爬取 深度扫描
+		httpRunner(hosts, o)
 	}
+}
+
+func checkData(data string, o string) {
+	//urls := make([]string, 0)
+
+	urls := make([]string, 0)
+	urls = append(urls, data)
+	httpRunner(urls, o)
+	webPoc()
+
+}
+
+func httpRunner(hosts []string, o string) {
+	options := httpxrunner.ParseOptions(hosts, o)
+	//println(options)
+	httpxRunner, _ := httpxrunner.New(options)
+	httpxRunner.RunEnumeration()
+	httpxRunner.Close()
 }
 
 func brute(datas []string, userDict string, passDict string) {
 	for _, data := range datas {
-		if strings.Contains(data, "Name") {
-			println(data)
-		}
 		//println(data)
+		//if strings.Contains(data, "Name") {
+		//	println(data)
+		//}
 		// gjson解析指纹识别结果
 		ip := gjson.Get(data, "ip")
 		port := gjson.Get(data, "port")
 		protocol := gjson.Get(data, "protocol")
 		uri := ""
+		/*
+			if protocol.String() == "http" {
+
+			}
+
+		*/
 		if crack.SupportProtocols[protocol.String()] {
 			//整理组合结果为127.0.0.1:3306|mysql 格式，传给crack
 			uri = ip.String() + ":" + port.String() + "|" + protocol.String()
 		} else {
 			continue
 		}
-		if protocol.String() == "http" {
-			webBruteforce()
-			webPoc()
-		}
+
 		//密码爆破 指纹识别到单个结果 即开始爆破
 		options := crackrunner.Options{Input: uri, UserFile: userDict, PassFile: passDict}
 		//fmt.Printf("%v", options)
 		option := crackrunner.ParseOptions(&options)
 		//fmt.Printf("%v", option)
 		//设置爆破参数 线程 超时
-		crackOptions := setOptions(20, 1)
+		crackOptions := setOptions(50, 1)
 		newRunner, err := crackrunner.NewRunner(option, crack2.Options(crackOptions))
 		if err != nil {
 			gologger.Fatal().Msgf("Could not create runner: %v", err)

@@ -17,12 +17,11 @@ package scan
 import (
 	"crypto/tls"
 	"fmt"
+	"github.com/praetorian-inc/fingerprintx/pkg/plugins"
 	"log"
 	"net"
 	"sort"
 	"time"
-
-	"github.com/praetorian-inc/fingerprintx/pkg/plugins"
 )
 
 var dialer = &net.Dialer{
@@ -35,6 +34,7 @@ var sortedUDPPlugins = make([]plugins.Plugin, 0)
 var tlsConfig = tls.Config{} //nolint:gosec
 
 func init() {
+
 	setupPlugins()
 	cipherSuites := make([]uint16, 0)
 
@@ -124,11 +124,14 @@ func (c *Config) SimpleScanTarget(target plugins.Target) (*plugins.Service, erro
 	// first check the default port mappings for TCP / TLS
 	for _, plugin := range sortedTCPPlugins {
 		if plugin.PortPriority(port) {
+			//print(ip + "  ")
+			//println(port)
 			conn, err := DialTCP(ip, port)
 			if err != nil {
 				return nil, fmt.Errorf("unable to connect, err = %w", err)
 			}
 			result, err := simplePluginRunner(conn, target, c, plugin)
+			//println(result)
 			if err != nil && c.Verbose {
 				log.Printf("error: %v scanning %v\n", err, target.Address.String())
 			}
@@ -218,7 +221,7 @@ func simplePluginRunner(
 	}
 
 	result, err := plugin.Run(conn, config.DefaultTimeout, target)
-
+	//println(result)
 	// Log probe completion.
 	if config.Verbose {
 		log.Printf(
