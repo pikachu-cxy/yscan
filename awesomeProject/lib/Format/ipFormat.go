@@ -292,7 +292,7 @@ func Choose(host string, port string, w bool, dict bool, o string, path bool) {
 				parsedTarget, _ := runner.ParseTarget(input)
 				targetsList = append(targetsList, parsedTarget)
 			}
-			println("正在进行web指纹识别~ 请稍等------------------------------")
+			println("正在进行指纹识别~ 请稍等------------------------------")
 			for _, input := range inputs {
 				//排除了404和400状态码显示
 				checkData(input, o)
