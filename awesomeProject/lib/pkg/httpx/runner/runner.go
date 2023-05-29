@@ -2,6 +2,7 @@ package runner
 
 import (
 	"awesomeProject/lib/File"
+	"awesomeProject/lib/pkg/webfinger"
 	"bufio"
 	"bytes"
 	"context"
@@ -857,8 +858,21 @@ func (r *Runner) RunEnumeration() {
 				row = resp.CSVRow(&r.scanopts)
 
 			}
+			rows := strings.Split(row, " ")
+			cmss := webfinger.WebFinger(r.options.InputTargetHost[0])
+
+			//如果未包含 则输出
+			for _, i := range cmss {
+				if strings.Contains(row, strings.ToLower(i)) {
+					//println(i)
+				} else {
+					//未包含则返回 该指纹，传入poc检测模块
+					print(i)
+				}
+			}
 			if r.options.requestURIs == nil {
 				gologger.Silent().Msgf("%s\n", row)
+
 				err := File.WriteFile(r.options.Output, row+"\n")
 				if err != nil {
 					return
@@ -867,10 +881,8 @@ func (r *Runner) RunEnumeration() {
 
 				//gologger.Silent().Msgf("%s\n", row)
 				//输出结果显示  排除404和400
-
-				rows := strings.Split(row, " ")
-
-				if strings.Contains(rows[1], "400") || strings.Contains(rows[1], "404") {
+				//Format.WebFinger(r.options.RequestURI)
+				if strings.Contains(rows[0], "400") || strings.Contains(rows[1], "404") {
 					//nolint:errcheck // this method needs a small refactor to reduce complexity
 					//f.WriteString(row + "\n")
 

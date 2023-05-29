@@ -348,7 +348,7 @@ func Choose(host string, port string, w bool, dict bool, o string, path bool) {
 		}
 		println("正在进行系统端口指纹识别~ 请稍等------------------------------")
 		//fast模式 crackrunner.CreateScanConfigFast()
-		results, _ := scan.ScanTargets(targetsList, scan.Config(runner.CreateScanConfig()))
+		results, _ := scan.ScanTargets(targetsList, scan.Config(runner.CreateScanConfigFast()))
 		runner.Report(results)
 		//datas, _ := runner.Report(results)
 		/*
@@ -386,11 +386,12 @@ func Choose(host string, port string, w bool, dict bool, o string, path bool) {
 				}
 			}
 		}
-		//爆破域名 深度扫描
+		//todo 子域名爆破 深度扫描
 
 	case "url":
 		//访问连通性--指纹识别--poc探测
-		//js爬取 深度扫描
+		//todo js爬取 深度扫描
+		//WebFinger(host)
 		httpRunner(hosts, o)
 		if path {
 
@@ -477,10 +478,6 @@ func setOptions(thread int, timeout int) crack.Options {
 		Silent:   false,
 	}
 	return crackOptions
-}
-
-func webBruteforce() {
-
 }
 
 func webPoc() {
