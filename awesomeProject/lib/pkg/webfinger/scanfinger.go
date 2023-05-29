@@ -98,7 +98,7 @@ func xegexpjs(reg string, resp string) (reslut1 [][]string) {
 func getfavicon(httpbody string, turl string) string {
 	faviconpaths := xegexpjs(`href="(.*?favicon....)"`, httpbody)
 	var faviconpath string
-	u, err := url.Parse(turl)
+	u, err := url.Parse("http://" + turl)
 	if err != nil {
 		panic(err)
 	}

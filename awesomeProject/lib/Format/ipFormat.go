@@ -323,23 +323,22 @@ func Choose(host string, port string, w bool, dict bool, o string, path bool) {
 		ipAlive := exec.IpIcmp(hosts, o)
 		portsMap, _ := exec.ParsePorts(port)
 		targetsList := make([]plugins.Target, 0)
-		inputss := make([]string, 0)
+		inputs := make([]string, 0)
 		for _, host := range ipAlive {
-			inputs := exec.ScanPort(portsMap, host, w, o)
+			inputs = exec.ScanPort(portsMap, host, w, o)
 			//finger识别开始
 			for _, input := range inputs {
-				inputss = append(inputss, input)
 				//println(input)
 				parsedTarget, _ := runner.ParseTarget(input)
 				targetsList = append(targetsList, parsedTarget)
 			}
 		}
-		for _, input := range inputss {
+		for _, input := range inputs {
 			checkData(input, o)
 		}
 		if path {
 
-			for _, input := range inputss {
+			for _, input := range inputs {
 				urls := make([]string, 0)
 				urls = append(urls, input)
 				//排除了404和400状态码显示

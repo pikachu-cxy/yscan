@@ -1537,6 +1537,7 @@ retry:
 		for match := range matches {
 			technologies = append(technologies, match)
 		}
+
 		cmss := webfinger.WebFinger(r.options.InputTargetHost[0])
 		if len(technologies) > 0 {
 			//对比 看有无httpx漏掉的指纹，如有则加进去
