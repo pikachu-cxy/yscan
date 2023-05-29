@@ -457,7 +457,7 @@ func brute(datas []string, userDict string, passDict string) {
 		} else {
 			continue
 		}
-
+		println("正在进行端口服务爆破~ 请稍等------------------------------")
 		//密码爆破 指纹识别到单个结果 即开始爆破
 		options := crackrunner.Options{Input: uri, UserFile: userDict, PassFile: passDict}
 		//fmt.Printf("%v", options)
