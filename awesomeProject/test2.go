@@ -40,9 +40,10 @@ func main() {
 	flag.StringVar(&port, "port", "top100", "输入需要扫描的端口,支持如下参数：full（全端口扫描）,top100,top1000 ,HttPorts(常见http端口）,1-65535（自定义端口范围）")
 	flag.StringVar(&filePath, "hf", "", "指定需扫描的IP/域名/url 文件路径")
 	flag.StringVar(&outPut, "output", "output.txt", "导出扫描结果到指定文件")
-	flag.BoolVar(&dict, "dict", false, "是否使用字典密码本进行爆破，默认使用程序内置账户密码")
-	flag.BoolVar(&path, "path", false, "是否进行目录爆破")
-	//flag.BoolVar(&silent, "silent", false, "是否输出结果至文件,默认不输出")
+	flag.BoolVar(&dict, "dict", false, "是否对端口服务(ssh,ftp..)进行爆破，默认不爆破")
+	flag.BoolVar(&path, "path", false, "是否进行目录爆破,默认不爆破")
+	//flag.BoolVar(&subdomain, "domain", false, "是否爆破子域名，默认不爆破")
+	//flag.BoolVar(&poc, "poc", true, "是否进行poc探测，默认探测")
 	flag.Parse()
 
 	//port := flag.Int("port", 0, "端口号")

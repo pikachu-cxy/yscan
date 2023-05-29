@@ -315,7 +315,7 @@ func Choose(host string, port string, w bool, dict bool, o string, path bool) {
 			if dict {
 				brute(datas, "user.txt", "pass.txt")
 			} else {
-				brute(datas, "", "")
+				//brute(datas, "", "")
 			}
 		}
 	case "ips":
@@ -349,13 +349,13 @@ func Choose(host string, port string, w bool, dict bool, o string, path bool) {
 		//fast模式 crackrunner.CreateScanConfigFast()
 		results, _ := scan.ScanTargets(targetsList, scan.Config(runner.CreateScanConfigFast()))
 		runner.Report(results)
-		//datas, _ := runner.Report(results)
-		/*
-			if dict {
-				brute(datas, "user.txt", "pass.txt")
-			} else {
-				brute(datas, "", "")
-			}*/
+		datas, _ := runner.Report(results)
+
+		if dict {
+			brute(datas, "user.txt", "pass.txt")
+		} else {
+			//brute(datas, "", "")
+		}
 	case "domain":
 		host := hosts[0]
 		//如果对方禁ping 通过DNS解析判断存活
@@ -392,7 +392,7 @@ func Choose(host string, port string, w bool, dict bool, o string, path bool) {
 		//todo js爬取 深度扫描
 		//WebFinger(host)
 		httpRunner(hosts, o)
-		//technologies []string
+		//technologies []string todo poc扫描
 		technologies := httpxrunner.Techs
 		for _, tech := range technologies {
 			println(tech)
