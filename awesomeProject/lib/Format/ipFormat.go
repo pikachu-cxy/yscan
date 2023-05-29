@@ -393,6 +393,11 @@ func Choose(host string, port string, w bool, dict bool, o string, path bool) {
 		//todo js爬取 深度扫描
 		//WebFinger(host)
 		httpRunner(hosts, o)
+		//technologies []string
+		technologies := httpxrunner.Techs
+		for _, tech := range technologies {
+			println(tech)
+		}
 		if path {
 
 			urls := make([]string, 0)

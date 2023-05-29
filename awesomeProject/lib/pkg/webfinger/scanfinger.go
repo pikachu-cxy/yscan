@@ -47,9 +47,6 @@ func WebFinger(host string) []string {
 		println("json jie xi chu cuo")
 	}
 	cmss := ScanFinger(host, cmslist)
-	for _, cms := range cmss {
-		println(cms)
-	}
 	return cmss
 }
 func ScanFinger(url string, cmsList *PackFinger) []string {
@@ -84,7 +81,7 @@ func ScanFinger(url string, cmsList *PackFinger) []string {
 			}
 		}
 	}
-	result := removeDuplicates(cmss)
+	result := RemoveDuplicates(cmss)
 	return result
 }
 
@@ -179,7 +176,7 @@ func InsertInto(s string, interval int, sep rune) string {
 	return buffer.String()
 }
 
-func removeDuplicates(arr []string) []string {
+func RemoveDuplicates(arr []string) []string {
 	// 创建一个空的 map 用于存储元素和出现的次数
 	seen := make(map[string]bool)
 	result := []string{} // 存储去重后的结果

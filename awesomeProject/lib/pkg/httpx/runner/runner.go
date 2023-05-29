@@ -67,6 +67,8 @@ import (
 	wappalyzer "github.com/projectdiscovery/wappalyzergo"
 )
 
+var Techs []string
+
 // Runner is a client for running the enumeration process.
 type Runner struct {
 	options         *Options
@@ -867,7 +869,7 @@ func (r *Runner) RunEnumeration() {
 					//println(i)
 				} else {
 					//未包含则返回 该指纹，传入poc检测模块
-					print(i)
+					//print(i)
 				}
 			}
 			if r.options.requestURIs == nil {
@@ -1535,11 +1537,22 @@ retry:
 		for match := range matches {
 			technologies = append(technologies, match)
 		}
-
+		cmss := webfinger.WebFinger(r.options.InputTargetHost[0])
 		if len(technologies) > 0 {
+			//对比 看有无httpx漏掉的指纹，如有则加进去
+			for _, tech := range technologies {
+				for _, c := range cmss {
+					if strings.ToLower(c) != strings.ToLower(tech) {
+						technologies = append(technologies, c)
+					}
+				}
+			}
+			//去重
+			technologies = webfinger.RemoveDuplicates(technologies)
+			//排序
 			sort.Strings(technologies)
+			Techs = technologies
 			technologies := strings.Join(technologies, ",")
-
 			builder.WriteString(" [")
 			if !scanopts.OutputWithNoColor {
 				builder.WriteString(aurora.Magenta(technologies).String())
