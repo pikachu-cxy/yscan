@@ -91,8 +91,8 @@ func IsIPRange2(s string) (string, bool) {
 		return "", false
 	}
 	ip := parts[0] + "-" + ip2
-	println(parts[0] + " 123")
-	println(ip)
+	//println(parts[0] + " 123")
+	//println(ip)
 	return ip, IpCompare(parts[0], ip2)
 }
 
@@ -232,6 +232,10 @@ func ChooseFormat(ip string) (s []string, s2 string) {
 		p = append(p, ip)
 		return p, "ip"
 	}
+	if IsUrl(ip) {
+		p = append(p, ip)
+		return p, "url"
+	}
 	ipscope, ipbool := IpCIDRFormat(ip)
 	if ipbool {
 		return ipscope, "ips"
@@ -248,10 +252,6 @@ func ChooseFormat(ip string) (s []string, s2 string) {
 	if IsDomainRange(ip) {
 		p = append(p, ip)
 		return p, "domain"
-	}
-	if IsUrl(ip) {
-		p = append(p, ip)
-		return p, "url"
 	}
 
 	return []string{}, ""
@@ -414,8 +414,7 @@ func checkData(data string, o string) {
 	urls := make([]string, 0)
 	urls = append(urls, data)
 	httpRunner(urls, o)
-	webPoc()
-
+	//pocscanOptions.webPoc()
 }
 
 func httpRunner(hosts []string, o string) {
@@ -484,6 +483,67 @@ func setOptions(thread int, timeout int) crack.Options {
 	return crackOptions
 }
 
-func webPoc() {
+/*
+type Pocscan struct {
+	GobyPocDir   string `yaml:"goby-poc-dir"`
+	XrayPocDir   string `yaml:"xray-poc-dir"`
+	NucleiPocDir string `yaml:"nuclei-poc-dir"`
+	GobyPocs     []*goby.Poc
+	XrayPocs     []*xray.Poc
+	NucleiPocs   []*nuclei.Template
+}
+
+var Worker Pocscan
+
+
+
+func initPoc() (err error) {
+	Worker.GobyPocs, err = goby.LoadAllPoc(Worker.GobyPocDir)
+	if err != nil {
+		return
+	}
+	Worker.XrayPocs, err = xray.LoadAllPoc(Worker.XrayPocDir)
+	if err != nil {
+		return
+	}
+	Worker.NucleiPocs, err = nuclei.LoadAllPoc(Worker.NucleiPocDir)
+	if err != nil {
+		return
+	}
+
+	gologger.Info().Msgf("gobyPocs: %v", len(Worker.GobyPocs))
+	gologger.Info().Msgf("xrayPocs: %v", len(Worker.XrayPocs))
+	gologger.Info().Msgf("nucleiPocs: %v", len(Worker.NucleiPocs))
+	return
+}
+
+func (o *PocscanOptions) webPoc(targets []string) {
+	err := initPoc()
+	if err != nil {
+		gologger.Fatal().Msgf("initPoc() err, %v", err)
+		return
+	}
+	options := &pocscan.Options{
+		Proxy:   "",
+		Timeout: 1,
+		Headers: []string{},
+	}
+	pocscanRunner, err := pocscan.NewRunner(options, Worker.GobyPocs, Worker.XrayPocs, Worker.NucleiPocs)
+	if err != nil {
+		gologger.Error().Msgf("pocscan.NewRunner() err, %v", err)
+		return
+	}
+	scanInputs, err := pocscan.ParsePocInput(targets)
+	if err != nil {
+		gologger.Error().Msgf("pocscan.ParsePocInput() err, %v", err)
+		return
+	}
+	// poc扫描
+	results := pocscanRunner.RunPoc(scanInputs)
+	if len(results) > 0 {
+		gologger.Info().Msgf("poc验证成功: %v", len(results))
+	}
+	// 保存 pocscan 结果
 
 }
+*/

@@ -43,7 +43,7 @@ func main() {
 	flag.BoolVar(&dict, "dict", false, "是否对端口服务(ssh,ftp..)进行爆破，默认不爆破")
 	flag.BoolVar(&path, "path", false, "是否进行目录爆破,默认不爆破")
 	//flag.BoolVar(&subdomain, "domain", false, "是否爆破子域名，默认不爆破")
-	//flag.BoolVar(&poc, "poc", true, "是否进行poc探测，默认探测")
+	//flag.BoolVar(&poc, "poc", true, "是否进行poc探测，默认不探测")
 	flag.Parse()
 
 	//port := flag.Int("port", 0, "端口号")
@@ -51,6 +51,7 @@ func main() {
 	start := time.Now()
 	//如只在命令行输入资产，则认为扫描资产数量不大
 	if filePath == "" && host != "" {
+
 		File.CreateFile(outPut)
 		//exec.OutputSet(outPut)
 		Format.Choose(host, port, true, dict, outPut, path)
