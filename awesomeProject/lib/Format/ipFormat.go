@@ -3,6 +3,10 @@ package Format
 import (
 	"awesomeProject/lib/File"
 	"awesomeProject/lib/exec"
+	"awesomeProject/lib/pkg/afrog/config"
+	afrogresult "awesomeProject/lib/pkg/afrog/result"
+	afrogrunner "awesomeProject/lib/pkg/afrog/runner"
+	"awesomeProject/lib/pkg/afrog/utils"
 	"awesomeProject/lib/pkg/crack"
 	httpxrunner "awesomeProject/lib/pkg/httpx/runner"
 	"awesomeProject/lib/pkg/internals/crackrunner"
@@ -25,6 +29,8 @@ import (
 	"strconv"
 	"strings"
 	"sync"
+	"sync/atomic"
+	"time"
 )
 
 type service struct {
@@ -419,16 +425,62 @@ func Choose(host string, port string, w bool, dict bool, o string, path bool) {
 		//WebFinger(host)
 		httpRunner(hosts, o)
 		//technologies []string todo poc扫描
-		//technologies := httpxrunner.Techs
-		//for _, tech := range technologies {
-		//	println(tech)
-		//}
+		technologies := httpxrunner.Techs
+		var techs string
+		for _, tech := range technologies {
+			techs = tech + "," + techs
+			println(tech)
+		}
+		options, err := config.NewOptions(host, techs)
+		r, err := afrogrunner.NewRunner(options)
+		if err != nil {
+			gologger.Error().Msg(err.Error())
+			os.Exit(0)
+		}
+		if err != nil {
+			gologger.Error().Msgf("Could not create runner: %s\n", err)
+			os.Exit(0)
+		}
+		var (
+			lock = sync.Mutex{}
+			//starttime = time.Now()
+			number uint32
+		)
+		r.OnResult = func(result *afrogresult.Result) {
+			if !options.Silent {
+				defer func() {
+					atomic.AddUint32(&options.CurrentCount, 1)
+					if !options.Silent {
+						fmt.Printf("\r%d%% (%d/%d), %s", int(options.CurrentCount)*100/int(options.Count), options.CurrentCount, options.Count, strings.Split(time.Since(time.Now()).String(), ".")[0]+"s")
+						// fmt.Printf("\r%d/%d/%d%%/%s", options.CurrentCount, options.Count, int(options.CurrentCount)*100/int(options.Count), strings.Split(time.Since(starttime).String(), ".")[0]+"s")
+					}
+				}()
+			}
+			if result.IsVul {
+				lock.Lock()
+
+				atomic.AddUint32(&number, 1)
+				result.PrintColorResultInfoConsole(utils.GetNumberText(int(number)))
+
+				if !options.DisableOutputHtml {
+					r.Report.SetResult(result)
+					r.Report.Append(utils.GetNumberText(int(number)))
+				}
+
+				if len(options.Json) > 0 || len(options.JsonAll) > 0 {
+					r.JsonReport.SetResult(result)
+					r.JsonReport.Append()
+				}
+
+				lock.Unlock()
+			}
+
+		}
 		if path {
 			//目录爆破线程暂定为80
 			brutePath(host, hosts, o, pathDict, threads)
 		}
 	}
-
 }
 
 func brutePath(host string, hosts goflags.StringSlice, o string, path string, threads int) {
