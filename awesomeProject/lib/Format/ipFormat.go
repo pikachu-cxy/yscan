@@ -429,8 +429,9 @@ func Choose(host string, port string, w bool, dict bool, o string, path bool) {
 		var techs string
 		for _, tech := range technologies {
 			techs = tech + "," + techs
-			println(tech)
+			//println(tech)
 		}
+		println(techs)
 		options, err := config.NewOptions(host, techs)
 		r, err := afrogrunner.NewRunner(options)
 		if err != nil {
@@ -455,6 +456,9 @@ func Choose(host string, port string, w bool, dict bool, o string, path bool) {
 						// fmt.Printf("\r%d/%d/%d%%/%s", options.CurrentCount, options.Count, int(options.CurrentCount)*100/int(options.Count), strings.Split(time.Since(starttime).String(), ".")[0]+"s")
 					}
 				}()
+			}
+			if result.IsVul {
+				println("has vul!")
 			}
 			if result.IsVul {
 				lock.Lock()
