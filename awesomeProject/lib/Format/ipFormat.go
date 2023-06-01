@@ -1,6 +1,7 @@
 package Format
 
 import (
+	"awesomeProject/lib/File"
 	"awesomeProject/lib/exec"
 	"awesomeProject/lib/pkg/crack"
 	httpxrunner "awesomeProject/lib/pkg/httpx/runner"
@@ -8,18 +9,22 @@ import (
 	_ "awesomeProject/lib/pkg/internals/crackrunner"
 	"awesomeProject/lib/pkg/runner"
 	"awesomeProject/lib/pkg/scan"
+	"bufio"
 	"encoding/binary"
 	"fmt"
 	crack2 "github.com/niudaii/crack/pkg/crack"
 	"github.com/praetorian-inc/fingerprintx/pkg/plugins"
+	"github.com/projectdiscovery/goflags"
 	_ "github.com/projectdiscovery/goflags"
 	"github.com/projectdiscovery/gologger"
 	_ "github.com/projectdiscovery/utils/slice"
 	"github.com/tidwall/gjson"
 	"net"
+	"os"
 	"regexp"
 	"strconv"
 	"strings"
+	"sync"
 )
 
 type service struct {
@@ -75,6 +80,11 @@ func ipFormat(host string) bool {
 
 // IsIPRange2 192.168.21.1-255
 func IsIPRange2(s string) (string, bool) {
+	pattern := `(^(\d{1,3}\.){3}\d{1,3})-\d{1,3}$`
+	matched, _ := regexp.MatchString(pattern, s)
+	if !matched {
+		return "", false
+	}
 	// 以连字符分割字符串，判断是否有两个 IP 地址
 	parts := strings.Split(s, "-")
 	if len(parts) != 2 {
@@ -98,7 +108,11 @@ func IsIPRange2(s string) (string, bool) {
 
 // 192.168.21.1-192.168.21.255
 func IsIPRange(s string) ([]string, bool) {
-
+	pattern := `(^(\d{1,3}\.){3}\d{1,3})-(\d{1,3}\.){3}\d{1,3}$`
+	matched, _ := regexp.MatchString(pattern, s)
+	if !matched {
+		return nil, false
+	}
 	// 以连字符分割字符串，判断是否有两个 IP 地址
 	parts := strings.Split(s, "-")
 	if len(parts) != 2 {
@@ -136,8 +150,14 @@ func IsIPRange(s string) ([]string, bool) {
 func IpCompare(ip1 string, ip2 string) bool {
 
 	// 将 IP 地址转换为整数
-	ip1Int := ipToInt(ip1)
-	ip2Int := ipToInt(ip2)
+	ip1Int, err := ipToInt(ip1)
+	if err != nil {
+		return false
+	}
+	ip2Int, err := ipToInt(ip2)
+	if err != nil {
+		return false
+	}
 
 	// 比较 IP 地址的整数值
 	if ip1Int < ip2Int {
@@ -155,13 +175,25 @@ func IpCompare(ip1 string, ip2 string) bool {
 }
 
 // 将ip地址转化为整数
-func ipToInt(ip string) uint32 {
+func ipToInt(ip string) (uint32, error) {
 	parts := strings.Split(ip, ".")
-	a, _ := strconv.Atoi(parts[0])
-	b, _ := strconv.Atoi(parts[1])
-	c, _ := strconv.Atoi(parts[2])
-	d, _ := strconv.Atoi(parts[3])
-	return uint32((a << 24) | (b << 16) | (c << 8) | d)
+	a, err := strconv.Atoi(parts[0])
+	if err != nil {
+		return 1, err
+	}
+	b, err := strconv.Atoi(parts[1])
+	if err != nil {
+		return 1, err
+	}
+	c, err := strconv.Atoi(parts[2])
+	if err != nil {
+		return 1, err
+	}
+	d, err := strconv.Atoi(parts[3])
+	if err != nil {
+		return 1, err
+	}
+	return uint32((a << 24) | (b << 16) | (c << 8) | d), nil
 }
 
 func parseIPRange(ipRange string) []string {
@@ -232,10 +264,7 @@ func ChooseFormat(ip string) (s []string, s2 string) {
 		p = append(p, ip)
 		return p, "ip"
 	}
-	if IsUrl(ip) {
-		p = append(p, ip)
-		return p, "url"
-	}
+
 	ipscope, ipbool := IpCIDRFormat(ip)
 	if ipbool {
 		return ipscope, "ips"
@@ -244,11 +273,17 @@ func ChooseFormat(ip string) (s []string, s2 string) {
 	if ipbool {
 		return ipscope, "ips"
 	}
+	if IsUrl(ip) {
+		p = append(p, ip)
+		return p, "url"
+	}
+
 	ips, ipbool1 := IsIPRange2(ip)
 	if ipbool1 {
 		ipscope, ipbool = IsIPRange(ips)
 		return ipscope, "ips"
 	}
+
 	if IsDomainRange(ip) {
 		p = append(p, ip)
 		return p, "domain"
@@ -268,6 +303,8 @@ func inc(ip net.IP) {
 }
 
 func Choose(host string, port string, w bool, dict bool, o string, path bool) {
+	pathDict := "path.txt"
+	threads := 80
 	hosts, format := ChooseFormat(host)
 	switch strings.ToLower(format) {
 	case "ip":
@@ -285,7 +322,7 @@ func Choose(host string, port string, w bool, dict bool, o string, path bool) {
 		}
 		if exec.OnePing(host, o) {
 			portsMap, _ := exec.ParsePorts(port)
-			inputs := exec.ScanPort(portsMap, host, w, o)
+			inputs := exec.Scan(portsMap, host, w, o)
 			//对系统端口进行指纹识别
 			targetsList := make([]plugins.Target, 0)
 			for _, input := range inputs {
@@ -297,20 +334,17 @@ func Choose(host string, port string, w bool, dict bool, o string, path bool) {
 				//排除了404和400状态码显示
 				checkData(input, o)
 			}
+
 			if path {
-
-				for _, input := range inputs {
-					urls := make([]string, 0)
-					urls = append(urls, input)
-					//排除了404和400状态码显示
-					httpRunnerBrute(urls, o, "path.txt")
-				}
+				brutePath(host, hosts, o, pathDict, threads)
 			}
-
 			//fast模式 crackrunner.CreateScanConfigFast()
 			results, _ := scan.ScanTargets(targetsList, scan.Config(runner.CreateScanConfig()))
 			datas, _ := runner.Report(results)
-			//可以设置为”“ 则使用默认字典爆破
+
+			for _, data := range datas {
+				File.WriteFile(o, data+"\n")
+			}
 
 			if dict {
 				brute(datas, "user.txt", "pass.txt")
@@ -325,7 +359,7 @@ func Choose(host string, port string, w bool, dict bool, o string, path bool) {
 		targetsList := make([]plugins.Target, 0)
 		inputs := make([]string, 0)
 		for _, host := range ipAlive {
-			inputs = exec.ScanPort(portsMap, host, w, o)
+			inputs = exec.Scan(portsMap, host, w, o)
 			//finger识别开始
 			for _, input := range inputs {
 				//println(input)
@@ -336,15 +370,11 @@ func Choose(host string, port string, w bool, dict bool, o string, path bool) {
 		for _, input := range inputs {
 			checkData(input, o)
 		}
-		if path {
 
-			for _, input := range inputs {
-				urls := make([]string, 0)
-				urls = append(urls, input)
-				//排除了404和400状态码显示
-				httpRunnerBrute(urls, o, "path.txt")
-			}
+		if path {
+			brutePath(host, hosts, o, pathDict, threads)
 		}
+
 		println("正在进行系统端口指纹识别~ 请稍等------------------------------")
 		//fast模式 crackrunner.CreateScanConfigFast()
 		results, _ := scan.ScanTargets(targetsList, scan.Config(runner.CreateScanConfigFast()))
@@ -364,7 +394,7 @@ func Choose(host string, port string, w bool, dict bool, o string, path bool) {
 			portsMap, _ := exec.ParsePorts(port)
 			targetsList := make([]plugins.Target, 0)
 			//input 格式www.baidu.com:110
-			inputs := exec.ScanPort(portsMap, host, w, o)
+			inputs := exec.Scan(portsMap, host, w, o)
 			for _, input := range inputs {
 				parsedTarget, _ := runner.ParseTarget(input)
 				targetsList = append(targetsList, parsedTarget)
@@ -377,14 +407,10 @@ func Choose(host string, port string, w bool, dict bool, o string, path bool) {
 			}
 			checkData(host, o)
 			if path {
-				for _, input := range inputs {
-					urls := make([]string, 0)
-					urls = append(urls, input)
-					//排除了404和400状态码显示
-					httpRunnerBrute(urls, o, "path.txt")
-				}
+				brutePath(host, hosts, o, pathDict, threads)
 			}
 		}
+
 		//todo 子域名爆破 深度扫描
 
 	case "url":
@@ -393,19 +419,65 @@ func Choose(host string, port string, w bool, dict bool, o string, path bool) {
 		//WebFinger(host)
 		httpRunner(hosts, o)
 		//technologies []string todo poc扫描
-		technologies := httpxrunner.Techs
-		for _, tech := range technologies {
-			println(tech)
-		}
+		//technologies := httpxrunner.Techs
+		//for _, tech := range technologies {
+		//	println(tech)
+		//}
 		if path {
-
-			urls := make([]string, 0)
-			urls = append(urls, host)
-			//排除了404和400状态码显示
-			httpRunnerBrute(urls, o, "path.txt")
+			//目录爆破线程暂定为80
+			brutePath(host, hosts, o, pathDict, threads)
 		}
-
 	}
+
+}
+
+func brutePath(host string, hosts goflags.StringSlice, o string, path string, threads int) {
+	var wg sync.WaitGroup
+	urls := make([]string, 0)
+	urls = append(urls, host)
+	requests := make(chan string)
+	//排除了404和400状态码显示
+	lines, _ := readLinesFromFile(path)
+	for i := 0; i < threads; i++ {
+		//wg.Add(1)
+		go func() {
+			//defer wg.Done()
+			for line := range requests {
+				options := httpxrunner.ParseOptions(hosts, o, line)
+				//println(options)
+				httpxRunner, _ := httpxrunner.New(options)
+				httpxRunner.RunEnumeration()
+				httpxRunner.Close()
+				wg.Done()
+			}
+		}()
+	}
+	// 将目录添加到请求通道中
+	for _, dir := range lines {
+		wg.Add(1)
+		requests <- dir
+	}
+	close(requests)
+	wg.Wait()
+}
+
+func readLinesFromFile(filename string) ([]string, error) {
+	file, err := os.Open(filename)
+	if err != nil {
+		return nil, err
+	}
+	defer file.Close()
+
+	var lines []string
+	scanner := bufio.NewScanner(file)
+	for scanner.Scan() {
+		lines = append(lines, scanner.Text())
+	}
+
+	if err := scanner.Err(); err != nil {
+		return nil, err
+	}
+	return lines, nil
 }
 
 func checkData(data string, o string) {

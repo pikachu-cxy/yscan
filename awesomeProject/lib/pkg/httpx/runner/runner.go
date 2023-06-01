@@ -860,6 +860,8 @@ func (r *Runner) RunEnumeration() {
 				row = resp.CSVRow(&r.scanopts)
 
 			}
+			resps := make([]string, 0)
+			resps = append(resps, row)
 			rows := strings.Split(row, " ")
 			cmss := webfinger.WebFinger(r.options.InputTargetHost[0])
 
@@ -874,28 +876,28 @@ func (r *Runner) RunEnumeration() {
 			}
 			if r.options.requestURIs == nil {
 				gologger.Silent().Msgf("%s\n", row)
-
 				err := File.WriteFile(r.options.Output, row+"\n")
 				if err != nil {
 					return
 				}
 			} else {
-
+				//resp.ContentLength
 				//gologger.Silent().Msgf("%s\n", row)
-				//输出结果显示  排除404和400
+				//输出结果显示
 				//Format.WebFinger(r.options.RequestURI)
-				if strings.Contains(rows[0], "400") || strings.Contains(rows[1], "404") {
-					//nolint:errcheck // this method needs a small refactor to reduce complexity
-					//f.WriteString(row + "\n")
 
-				} else {
-					gologger.Silent().Msgf("%s\n", row)
-					err := File.WriteFile(r.options.Output, row+"\n")
-					if err != nil {
-						return
+				for _, i := range resps {
+					is := strings.Split(i, " ")
+					if is[1] == rows[1] && is[2] == rows[2] {
+						//gologger.Silent().Msgf("%s 无效的爆破!\n", row)
+					} else {
+						gologger.Silent().Msgf("%s\n", row)
+						err := File.WriteFile(r.options.Output, row+"\n")
+						if err != nil {
+							return
+						}
 					}
 				}
-
 			}
 			/*
 				if f != nil {

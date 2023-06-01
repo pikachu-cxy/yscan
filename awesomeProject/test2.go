@@ -46,9 +46,8 @@ func main() {
 	//flag.BoolVar(&poc, "poc", true, "是否进行poc探测，默认不探测")
 	flag.Parse()
 
-	//port := flag.Int("port", 0, "端口号")
-	//verbose := flag.Bool("verbose", false, "是否启用详细模式")
 	start := time.Now()
+
 	//如只在命令行输入资产，则认为扫描资产数量不大
 	if filePath == "" && host != "" {
 

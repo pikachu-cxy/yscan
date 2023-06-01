@@ -1,6 +1,7 @@
 package crackrunner
 
 import (
+	"awesomeProject/lib/File"
 	"fmt"
 	"github.com/niudaii/crack/pkg/crack"
 	"github.com/projectdiscovery/gologger"
@@ -45,7 +46,7 @@ func (r *Runner) Run(module string) {
 		for _, result := range results {
 			gologger.Print().Msgf("[+]%v -> %v %v", result.Protocol, result.Addr, result.UserPass)
 			//将爆破成功结果写入文件
-			//File.WriteFile()
+			File.WriteFile("output.txt", "[+]"+result.Protocol+" -> "+result.Addr+result.UserPass+"\n")
 		}
 	}
 }

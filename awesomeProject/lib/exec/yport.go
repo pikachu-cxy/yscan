@@ -85,8 +85,8 @@ func ParsePortsList(data string) ([]int, error) {
 			if p1 > p2 {
 				return nil, fmt.Errorf("invalid port range: %d-%d", p1, p2)
 			}
-
-			for i := p1; i <= p2; i++ {
+			var i int
+			for i = p1; i <= p2; i++ {
 				ports = append(ports, i)
 			}
 		} else {
@@ -100,7 +100,7 @@ func ParsePortsList(data string) ([]int, error) {
 	return ports, nil
 }
 
-//connect扫描 保证准确性 后续添加syn
+//connect扫描 保证准确性 后续添加syn ScanPort存在bug
 
 func ScanPort(portsMap []int, ip string, w bool, output string) []string {
 
@@ -133,6 +133,43 @@ func ScanPort(portsMap []int, ip string, w bool, output string) []string {
 	// 等待所有协程完成
 	wg.Wait()
 	return ads
+}
+
+//设置5000线程
+
+func Scan(portsMap []int, ip string, w bool, output string) []string {
+	adds := make([]string, 0)
+	ads := make(chan string)
+	// 使用 WaitGroup 来等待所有协程完成
+	var wg sync.WaitGroup
+
+	for i := 0; i < 5000; i++ {
+		go func() {
+			for ad := range ads {
+				conn, err := net.DialTimeout("tcp", ad, 1*time.Second)
+				if err == nil {
+					fmt.Printf("%s is open\n", ad)
+					if w {
+						File.WriteFile(output, ad+" is open\n")
+					}
+					conn.Close()
+					adds = append(adds, ad)
+				}
+				wg.Done()
+			}
+		}()
+	}
+
+	for _, port := range portsMap {
+		wg.Add(1)
+		address := fmt.Sprintf("%s:%d", ip, port)
+		ads <- address
+	}
+
+	close(ads)
+	wg.Wait()
+
+	return adds
 }
 
 // syn scan

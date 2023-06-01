@@ -430,7 +430,7 @@ func ParseOptions(uri goflags.StringSlice, output string, path string) *Options 
 	options.InputRawRequest = ""
 	options.InputTargetHost = uri
 	options.StatusCode = true
-	options.ContentLength = false
+	options.ContentLength = true
 	options.OutputContentType = false
 	options.Location = false
 	options.Favicon = false
