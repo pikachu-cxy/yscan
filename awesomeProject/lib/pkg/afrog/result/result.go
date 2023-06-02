@@ -1,6 +1,7 @@
 package result
 
 import (
+	"awesomeProject/lib/File"
 	"fmt"
 	"html"
 	"net/url"
@@ -85,8 +86,9 @@ func (r *Result) PrintResultInfo() string {
 	return "[" + utils.GetNowDateTime() + "] [" + r.PocInfo.Id + "] [" + r.PocInfo.Info.Severity + "] " + r.Target
 }
 
-func (r *Result) PrintColorResultInfoConsole(number string) {
+func (r *Result) PrintColorResultInfoConsole(number string, filename string) {
 	fulltarget, _ := url.QueryUnescape(html.EscapeString(r.FullTarget)) // fixed %!/(MISSING) BUG
+	File.WriteFile(filename, "[+]"+r.PocInfo.Info.Severity+" "+r.PocInfo.Id+" "+fulltarget+"\n")
 	fmt.Printf("\r" + log.LogColor.Time(number+" "+utils.GetNowDateTime()) + " " +
 		log.LogColor.Vulner(""+r.PocInfo.Id+"") + " " +
 		log.LogColor.GetColor(r.PocInfo.Info.Severity, ""+

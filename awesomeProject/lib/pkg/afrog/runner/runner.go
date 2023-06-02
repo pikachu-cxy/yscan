@@ -2,7 +2,6 @@ package runner
 
 import (
 	"errors"
-	"fmt"
 	"strings"
 
 	"awesomeProject/lib/pkg/afrog/catalog"
@@ -38,18 +37,20 @@ func NewRunner(options *config.Options) (*Runner, error) {
 		Timeout: options.Timeout,
 		Retries: options.Retries,
 	})
+	//生成report
+	/*
+		jr, err := report.NewJsonReport(options.Json, options.JsonAll)
+		if err != nil {
+			return runner, fmt.Errorf("%s", err.Error())
+		}
+		runner.JsonReport = jr
+		//report, err := report.NewReport(options.Output, report.DefaultTemplate)
+		//if err != nil {
+		//	return runner, fmt.Errorf("%s", err.Error())
+		//}
+		//runner.Report = report
 
-	jr, err := report.NewJsonReport(options.Json, options.JsonAll)
-	if err != nil {
-		return runner, fmt.Errorf("%s", err.Error())
-	}
-	runner.JsonReport = jr
-
-	report, err := report.NewReport(options.Output, report.DefaultTemplate)
-	if err != nil {
-		return runner, fmt.Errorf("%s", err.Error())
-	}
-	runner.Report = report
+	*/
 
 	if len(runner.options.Target) > 0 {
 		runner.options.Targets.Append(runner.options.Target)

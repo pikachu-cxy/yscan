@@ -30,7 +30,6 @@ import (
 	"strings"
 	"sync"
 	"sync/atomic"
-	"time"
 )
 
 type service struct {
@@ -308,7 +307,7 @@ func inc(ip net.IP) {
 	}
 }
 
-func Choose(host string, port string, w bool, dict bool, o string, path bool) {
+func Choose(host string, port string, w bool, dict bool, o string, path bool, poc bool) {
 	pathDict := "path.txt"
 	threads := 80
 	hosts, format := ChooseFormat(host)
@@ -336,20 +335,21 @@ func Choose(host string, port string, w bool, dict bool, o string, path bool) {
 				targetsList = append(targetsList, parsedTarget)
 			}
 			println("正在进行指纹识别~ 请稍等------------------------------")
-			for _, input := range inputs {
-				//排除了404和400状态码显示
-				checkData(input, o)
-			}
-
-			if path {
-				brutePath(host, hosts, o, pathDict, threads)
-			}
 			//fast模式 crackrunner.CreateScanConfigFast()
 			results, _ := scan.ScanTargets(targetsList, scan.Config(runner.CreateScanConfig()))
 			datas, _ := runner.Report(results)
 
 			for _, data := range datas {
 				File.WriteFile(o, data+"\n")
+			}
+			for _, input := range inputs {
+				//println(input)
+				//http指纹识别 or poc探测
+				checkData(input, o, poc)
+			}
+
+			if path {
+				brutePath(host, hosts, o, pathDict, threads)
 			}
 
 			if dict {
@@ -374,7 +374,7 @@ func Choose(host string, port string, w bool, dict bool, o string, path bool) {
 			}
 		}
 		for _, input := range inputs {
-			checkData(input, o)
+			checkData(input, o, poc)
 		}
 
 		if path {
@@ -411,7 +411,8 @@ func Choose(host string, port string, w bool, dict bool, o string, path bool) {
 			for _, data := range datas {
 				println(data)
 			}
-			checkData(host, o)
+			checkData(host, o, poc)
+
 			if path {
 				brutePath(host, hosts, o, pathDict, threads)
 			}
@@ -429,56 +430,10 @@ func Choose(host string, port string, w bool, dict bool, o string, path bool) {
 		var techs string
 		for _, tech := range technologies {
 			techs = tech + "," + techs
-			//println(tech)
 		}
-		println(techs)
-		options, err := config.NewOptions(host, techs)
-		r, err := afrogrunner.NewRunner(options)
-		if err != nil {
-			gologger.Error().Msg(err.Error())
-			os.Exit(0)
-		}
-		if err != nil {
-			gologger.Error().Msgf("Could not create runner: %s\n", err)
-			os.Exit(0)
-		}
-		var (
-			lock = sync.Mutex{}
-			//starttime = time.Now()
-			number uint32
-		)
-		r.OnResult = func(result *afrogresult.Result) {
-			if !options.Silent {
-				defer func() {
-					atomic.AddUint32(&options.CurrentCount, 1)
-					if !options.Silent {
-						fmt.Printf("\r%d%% (%d/%d), %s", int(options.CurrentCount)*100/int(options.Count), options.CurrentCount, options.Count, strings.Split(time.Since(time.Now()).String(), ".")[0]+"s")
-						// fmt.Printf("\r%d/%d/%d%%/%s", options.CurrentCount, options.Count, int(options.CurrentCount)*100/int(options.Count), strings.Split(time.Since(starttime).String(), ".")[0]+"s")
-					}
-				}()
-			}
-			if result.IsVul {
-				println("has vul!")
-			}
-			if result.IsVul {
-				lock.Lock()
-
-				atomic.AddUint32(&number, 1)
-				result.PrintColorResultInfoConsole(utils.GetNumberText(int(number)))
-
-				if !options.DisableOutputHtml {
-					r.Report.SetResult(result)
-					r.Report.Append(utils.GetNumberText(int(number)))
-				}
-
-				if len(options.Json) > 0 || len(options.JsonAll) > 0 {
-					r.JsonReport.SetResult(result)
-					r.JsonReport.Append()
-				}
-
-				lock.Unlock()
-			}
-
+		techs = strings.TrimRight(techs, ",")
+		if poc {
+			webPoc(host, techs, o)
 		}
 		if path {
 			//目录爆破线程暂定为80
@@ -536,13 +491,23 @@ func readLinesFromFile(filename string) ([]string, error) {
 	return lines, nil
 }
 
-func checkData(data string, o string) {
+func checkData(data string, o string, poc bool) {
 	//urls := make([]string, 0)
 
 	urls := make([]string, 0)
 	urls = append(urls, data)
 	httpRunner(urls, o)
-	//pocscanOptions.webPoc()
+	if poc {
+		technologies := httpxrunner.Techs
+		if technologies != nil {
+			var techs string
+			for _, tech := range technologies {
+				techs = tech + "," + techs
+			}
+			techs = strings.TrimRight(techs, ",")
+			webPoc(data, techs, o)
+		}
+	}
 }
 
 func httpRunner(hosts []string, o string) {
@@ -611,67 +576,42 @@ func setOptions(thread int, timeout int) crack.Options {
 	return crackOptions
 }
 
-/*
-type Pocscan struct {
-	GobyPocDir   string `yaml:"goby-poc-dir"`
-	XrayPocDir   string `yaml:"xray-poc-dir"`
-	NucleiPocDir string `yaml:"nuclei-poc-dir"`
-	GobyPocs     []*goby.Poc
-	XrayPocs     []*xray.Poc
-	NucleiPocs   []*nuclei.Template
+func webPoc(host string, techs string, output string) {
+	options, err := config.NewOptions(host, techs)
+	r, err := afrogrunner.NewRunner(options)
+	if err != nil {
+		gologger.Error().Msg(err.Error())
+		os.Exit(0)
+	}
+	if err != nil {
+		gologger.Error().Msgf("Could not create runner: %s\n", err)
+		os.Exit(0)
+	}
+	var (
+		lock   = sync.Mutex{}
+		number uint32
+	)
+	r.OnResult = func(result *afrogresult.Result) {
+		if result.IsVul {
+			lock.Lock()
+			atomic.AddUint32(&number, 1)
+			result.PrintColorResultInfoConsole(utils.GetNumberText(int(number)), output)
+
+			if !options.DisableOutputHtml {
+				r.Report.SetResult(result)
+				r.Report.Append(utils.GetNumberText(int(number)))
+			}
+			/*
+				if len(options.Json) > 0 || len(options.JsonAll) > 0 {
+					r.JsonReport.SetResult(result)
+					r.JsonReport.Append()
+				}
+			*/
+			lock.Unlock()
+		}
+	}
+	if err := r.Run(); err != nil {
+		gologger.Error().Msgf("poc runner run err: %s\n", err)
+		os.Exit(0)
+	}
 }
-
-var Worker Pocscan
-
-
-
-func initPoc() (err error) {
-	Worker.GobyPocs, err = goby.LoadAllPoc(Worker.GobyPocDir)
-	if err != nil {
-		return
-	}
-	Worker.XrayPocs, err = xray.LoadAllPoc(Worker.XrayPocDir)
-	if err != nil {
-		return
-	}
-	Worker.NucleiPocs, err = nuclei.LoadAllPoc(Worker.NucleiPocDir)
-	if err != nil {
-		return
-	}
-
-	gologger.Info().Msgf("gobyPocs: %v", len(Worker.GobyPocs))
-	gologger.Info().Msgf("xrayPocs: %v", len(Worker.XrayPocs))
-	gologger.Info().Msgf("nucleiPocs: %v", len(Worker.NucleiPocs))
-	return
-}
-
-func (o *PocscanOptions) webPoc(targets []string) {
-	err := initPoc()
-	if err != nil {
-		gologger.Fatal().Msgf("initPoc() err, %v", err)
-		return
-	}
-	options := &pocscan.Options{
-		Proxy:   "",
-		Timeout: 1,
-		Headers: []string{},
-	}
-	pocscanRunner, err := pocscan.NewRunner(options, Worker.GobyPocs, Worker.XrayPocs, Worker.NucleiPocs)
-	if err != nil {
-		gologger.Error().Msgf("pocscan.NewRunner() err, %v", err)
-		return
-	}
-	scanInputs, err := pocscan.ParsePocInput(targets)
-	if err != nil {
-		gologger.Error().Msgf("pocscan.ParsePocInput() err, %v", err)
-		return
-	}
-	// poc扫描
-	results := pocscanRunner.RunPoc(scanInputs)
-	if len(results) > 0 {
-		gologger.Info().Msgf("poc验证成功: %v", len(results))
-	}
-	// 保存 pocscan 结果
-
-}
-*/

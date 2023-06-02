@@ -172,6 +172,52 @@ func Scan(portsMap []int, ip string, w bool, output string) []string {
 	return adds
 }
 
+/*
+func arpScan(ip string) {
+
+	interfaces, err := net.Interfaces()
+
+	for _, iface := range interfaces {
+		c, err := arp.Dial(iface)
+	}
+
+	c, err := arp.Dial(iface)
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer c.Close()
+
+	// 构造ARP请求消息
+	req := &arp.Packet{
+		Operation: arp.OperationRequest,
+		SenderIP:  net.ParseIP("192.168.0.2"), // 替换为你的本地IP地址
+		TargetIP:  net.ParseIP(ip),
+		SenderMAC: iface.HardwareAddr,
+	}
+
+	// 发送ARP请求
+	if err := c.WriteTo(req, nil); err != nil {
+		log.Fatal(err)
+	}
+
+	// 设置超时时间
+	c.SetDeadline(time.Now().Add(time.Second * 3))
+
+	// 读取ARP响应
+	resp, _, err := c.Read()
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	// 判断IP地址是否存活
+	if resp.Operation == arp.OperationReply && resp.SenderIP.Equal(net.ParseIP(ip)) {
+		fmt.Println("IP地址存活:", ip)
+	} else {
+		fmt.Println("IP地址不存活:", ip)
+	}
+}
+*/
+
 // syn scan
 func synScan() {
 

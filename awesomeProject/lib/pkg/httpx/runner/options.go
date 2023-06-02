@@ -515,7 +515,7 @@ func ParseOptions(uri goflags.StringSlice, output string, path string) *Options 
 	options.HostMaxErrors = 30
 	options.ExcludeCDN = false
 	options.Retries = 0
-	options.Timeout = 2
+	options.Timeout = 3
 	options.MaxResponseBodySizeToSave = math.MaxInt32
 	options.MaxResponseBodySizeToRead = math.MaxInt32
 	/*

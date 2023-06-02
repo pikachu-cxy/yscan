@@ -118,7 +118,7 @@ type Options struct {
 
 func NewOptions(target string, search string) (*Options, error) {
 
-	options := &Options{Target: target, Search: search}
+	options := &Options{Target: target, Search: search, RateLimit: 150, Silent: true, DisableOutputHtml: true, Timeout: 10}
 	/*
 		flagSet := goflags.NewFlagSet()
 		flagSet.SetDescription(`afrog`)
@@ -183,14 +183,18 @@ func NewOptions(target string, search string) (*Options, error) {
 func (opt *Options) verifyOptions() error {
 
 	config, err := NewConfig()
+	workingDir, err := os.Getwd()
+	//fmt.Println("当前程序的相对路径:", workingDir)
 	if err != nil {
 		return err
 	}
 	opt.Config = config
 
 	if len(opt.Config.Reverse.Ceye.Domain) == 0 || len(opt.Config.Reverse.Ceye.ApiKey) == 0 {
-		homeDir, _ := os.UserHomeDir()
-		configDir := homeDir + "/.config/afrog/afrog-config.yaml"
+		//homeDir, _ := os.UserHomeDir()
+		//workingDir, _ := os.Getwd()
+		configDir := workingDir + "\\config.yaml"
+		//configDir := "/config.yaml"
 		gologger.Info().Msg("The reverse connection platform is not configured, which may affect the validation of certain RCE PoCs")
 		gologger.Info().Msgf("go to `%s` to configure the reverse connection platform\n", configDir)
 	}
@@ -238,7 +242,7 @@ func (opt *Options) verifyOptions() error {
 		return fmt.Errorf("either `target` or `target-file` must be set")
 	}
 
-	ShowBanner(upgrade)
+	//ShowBanner(upgrade)
 
 	if len(opt.Json) > 0 {
 		opt.OJ = output.NewOutputJson(opt.Json)

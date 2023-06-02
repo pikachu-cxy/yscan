@@ -70,12 +70,13 @@ func NewConfig() (*Config, error) {
 }
 
 func isExistConfigFile() error {
-	homeDir, err := os.UserHomeDir()
+	workingDir, err := os.Getwd()
+	//homeDir, err := os.UserHomeDir()
 	if err != nil {
 		return errors.Wrap(err, "could not get home directory")
 	}
 
-	configFile := filepath.Join(homeDir, ".config", "afrog", afrogConfigFilename)
+	configFile := filepath.Join(workingDir, "\\config.yaml")
 	if utils.Exists(configFile) {
 		return nil
 	}
@@ -84,12 +85,14 @@ func isExistConfigFile() error {
 }
 
 func (c *Config) GetConfigPath() string {
-	homeDir, err := os.UserHomeDir()
+	//homeDir, err := os.UserHomeDir()
+	homeDir, err := os.Getwd()
 	if err != nil {
 		return ""
 	}
 
-	configFile := filepath.Join(homeDir, ".config", "afrog", afrogConfigFilename)
+	configFile := filepath.Join(homeDir, "\\config.yaml")
+	println(configFile)
 	if !utils.Exists(configFile) {
 		return configFile
 	}
@@ -97,15 +100,15 @@ func (c *Config) GetConfigPath() string {
 }
 
 func getConfigFile() (string, error) {
-	homeDir, err := os.UserHomeDir()
+	homeDir, err := os.Getwd()
 	if err != nil {
 		return "", errors.Wrap(err, "could not get home directory")
 	}
 
-	configDir := filepath.Join(homeDir, ".config", "afrog")
+	configDir := filepath.Join(homeDir)
 	_ = os.MkdirAll(configDir, 0755)
 
-	afrogConfigFile := filepath.Join(configDir, afrogConfigFilename)
+	afrogConfigFile := filepath.Join(configDir, "\\config.yaml")
 	return afrogConfigFile, nil
 }
 
