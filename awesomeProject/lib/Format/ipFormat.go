@@ -307,6 +307,32 @@ func inc(ip net.IP) {
 	}
 }
 
+func ipIsAlive(host string, output string) bool {
+	ip := net.ParseIP(host)
+	//内网地址
+	if ip.IsPrivate() {
+		//内网判断方法 arp,udp常用端口，http常用端口
+		if exec.OnePing(host, output) {
+			return true
+		} else {
+			if exec.TcpScan(host, output) {
+				return true
+			}
+		}
+	} else {
+		//外网判断方法 udp常用端口，http常用端口
+		if exec.OnePing(host, output) {
+			//ping 通 不继续下面逻辑，直接返回true
+			return true
+		} else {
+			if exec.TcpScan(host, output) {
+				return true
+			}
+		}
+	}
+	return false
+}
+
 func Choose(host string, port string, w bool, dict bool, o string, path bool, poc bool) {
 	pathDict := "path.txt"
 	threads := 80
@@ -316,16 +342,7 @@ func Choose(host string, port string, w bool, dict bool, o string, path bool, po
 		//先判断是内网环境/外网环境
 		//内网可以arp udp tcp http
 		host = hosts[0]
-		ip := net.ParseIP(host)
-		//内网地址
-		if ip.IsPrivate() {
-			//内网判断方法 arp,udp常用端口，http常用端口
-
-		} else {
-			//外网判断方法 udp常用端口，http常用端口
-
-		}
-		if exec.OnePing(host, o) {
+		if ipIsAlive(host, o) {
 			portsMap, _ := exec.ParsePorts(port)
 			inputs := exec.Scan(portsMap, host, w, o)
 			//对系统端口进行指纹识别

@@ -178,14 +178,19 @@ func arpScan(ip string) {
 	interfaces, err := net.Interfaces()
 
 	for _, iface := range interfaces {
-		c, err := arp.Dial(iface)
-	}
+		c, err := arp.Dial(&iface)
+		if err != nil {
+			log.Fatal(err)
+		}
+		defer c.Close()
 
-	c, err := arp.Dial(iface)
-	if err != nil {
-		log.Fatal(err)
+		// 获取本地IP地址
+		addrs, err := iface.Addrs()
+		if err != nil {
+			log.Fatal(err)
+		}
+
 	}
-	defer c.Close()
 
 	// 构造ARP请求消息
 	req := &arp.Packet{
@@ -220,10 +225,5 @@ func arpScan(ip string) {
 
 // syn scan
 func synScan() {
-
-}
-
-// udp scan
-func udpScan() {
 
 }

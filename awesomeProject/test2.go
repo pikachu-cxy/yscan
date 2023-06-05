@@ -52,15 +52,12 @@ func main() {
 
 	//如只在命令行输入资产，则认为扫描资产数量不大
 	if filePath == "" && host != "" {
-
 		File.CreateFile(outPut)
-		//exec.OutputSet(outPut)
 		Format.Choose(host, port, true, dict, outPut, path, poc)
 	}
 	if filePath != "" && host == "" {
 		File.CreateFile(outPut)
 		ips, _ := File.ReadIPRangesFromFile(filePath)
-		//exec.OutputSet(outPut)
 		for _, host := range ips {
 			//choose 一次只读取一条资产
 			Format.Choose(host, port, true, dict, outPut, path, poc)
