@@ -401,7 +401,6 @@ func Choose(host string, port string, w bool, dict bool, o string, path bool, po
 		println("正在进行系统端口指纹识别~ 请稍等------------------------------")
 		//fast模式 crackrunner.CreateScanConfigFast()
 		results, _ := scan.ScanTargets(targetsList, scan.Config(runner.CreateScanConfigFast()))
-		runner.Report(results)
 		datas, _ := runner.Report(results)
 
 		if dict {
