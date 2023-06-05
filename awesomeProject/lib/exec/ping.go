@@ -41,7 +41,7 @@ func OnePing(host string, output string) bool {
 	}
 	err := cmd.Run()
 	if err != nil {
-		//
+		return false
 	} else {
 		File.WriteFile(output, host+"  is alive!\n")
 		fmt.Printf("%s is alive！\n", host)
@@ -94,7 +94,8 @@ func IpIcmp(ips []string, o string) []string {
 			go somePing(v, &wg, o)
 		}
 		wg.Wait()
-		fmt.Printf("ip段存活ip数量为：" + strconv.Itoa(number) + "\n")
+
+		fmt.Printf(ips[0] + " ip段存活ip数量为：" + strconv.Itoa(number) + "\n")
 
 		//File.WriteFile(output, "段存活ip数量为："+strconv.Itoa(number)+"\n")
 

@@ -402,7 +402,9 @@ func Choose(host string, port string, w bool, dict bool, o string, path bool, po
 		//fast模式 crackrunner.CreateScanConfigFast()
 		results, _ := scan.ScanTargets(targetsList, scan.Config(runner.CreateScanConfigFast()))
 		datas, _ := runner.Report(results)
-
+		for _, data := range datas {
+			File.WriteFile(o, data+"\n")
+		}
 		if dict {
 			brute(datas, "user.txt", "pass.txt")
 		} else {
