@@ -333,7 +333,7 @@ func ipIsAlive(host string, output string) bool {
 	return false
 }
 
-func Choose(host string, port string, w bool, dict bool, o string, path bool, poc bool) {
+func Choose(host string, port string, w bool, dict bool, o string, path bool, poc bool, searchPoc string) {
 	pathDict := "path.txt"
 	threads := 80
 	hosts, format := ChooseFormat(host)
@@ -362,7 +362,7 @@ func Choose(host string, port string, w bool, dict bool, o string, path bool, po
 			for _, input := range inputs {
 				//println(input)
 				//http指纹识别 or poc探测
-				checkData(input, o, poc)
+				checkData(input, o, poc, searchPoc)
 			}
 
 			if path {
@@ -391,7 +391,7 @@ func Choose(host string, port string, w bool, dict bool, o string, path bool, po
 			}
 		}
 		for _, input := range inputs {
-			checkData(input, o, poc)
+			checkData(input, o, poc, searchPoc)
 		}
 
 		if path {
@@ -429,7 +429,7 @@ func Choose(host string, port string, w bool, dict bool, o string, path bool, po
 			for _, data := range datas {
 				println(data)
 			}
-			checkData(host, o, poc)
+			checkData(host, o, poc, searchPoc)
 
 			if path {
 				brutePath(host, hosts, o, pathDict, threads)
@@ -450,6 +450,9 @@ func Choose(host string, port string, w bool, dict bool, o string, path bool, po
 			techs = tech + "," + techs
 		}
 		techs = strings.TrimRight(techs, ",")
+		if searchPoc != "" {
+			webPoc(host, searchPoc, o)
+		}
 		if poc {
 			webPoc(host, techs, o)
 		}
@@ -458,6 +461,11 @@ func Choose(host string, port string, w bool, dict bool, o string, path bool, po
 			brutePath(host, hosts, o, pathDict, threads)
 		}
 	}
+}
+
+func ParseTech(searchPoc string) []string {
+	techs := strings.Split(strings.ToLower(searchPoc), ",")
+	return techs
 }
 
 func brutePath(host string, hosts goflags.StringSlice, o string, path string, threads int) {
@@ -509,12 +517,15 @@ func readLinesFromFile(filename string) ([]string, error) {
 	return lines, nil
 }
 
-func checkData(data string, o string, poc bool) {
+func checkData(data string, o string, poc bool, searchPoc string) {
 	//urls := make([]string, 0)
 
 	urls := make([]string, 0)
 	urls = append(urls, data)
 	httpRunner(urls, o)
+	if searchPoc != "" {
+		webPoc(data, searchPoc, o)
+	}
 	if poc {
 		technologies := httpxrunner.Techs
 		if technologies != nil {
