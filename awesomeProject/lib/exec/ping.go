@@ -7,6 +7,7 @@ import (
 	"os/exec"
 	"runtime"
 	"strconv"
+	"strings"
 	"sync"
 	"time"
 )
@@ -50,7 +51,6 @@ func OnePing(host string, output string) bool {
 }
 
 func somePing(host string, wg *sync.WaitGroup, output string) {
-	defer wg.Done()
 	var cmd *exec.Cmd
 	switch runtime.GOOS {
 	case "windows":
@@ -82,6 +82,7 @@ func somePing(host string, wg *sync.WaitGroup, output string) {
 		File.WriteFile(output, host+"  is alive!\n")
 		fmt.Printf("%s is alive！\n", host)
 	}
+	defer wg.Done()
 }
 
 func IpIcmp(ips []string, o string) []string {
@@ -101,6 +102,60 @@ func IpIcmp(ips []string, o string) []string {
 
 	}
 	return ipAlive
+}
+func GateAwayIcmp(ips []string, output string) {
+	var wg sync.WaitGroup
+	task := make(chan string, 0)
+	if ips != nil {
+		for i := 0; i < 1000; i++ {
+			go func() {
+				for v := range task {
+					ip := net.ParseIP(v)
+					//只探测内网地址
+					if ip.IsPrivate() {
+						var cmd *exec.Cmd
+						switch runtime.GOOS {
+						case "windows":
+							cmd = exec.Command("ping", v, "-n", "1", "-w", "400")
+						case "linux":
+							cmd = exec.Command("ping", v, "-c", "1", "-W", "1")
+						case "darwin":
+							cmd = exec.Command("ping", v, "-c", "1", "-W", "400")
+						case "freebsd":
+							cmd = exec.Command("ping", "-c", "1", "-W", "200", v)
+						case "openbsd":
+							cmd = exec.Command("ping", "-c", "1", "-w", "200", v)
+						case "netbsd":
+							cmd = exec.Command("ping", "-c", "1", "-w", "2", v)
+						default:
+							cmd = exec.Command("ping", "-c", "1", v)
+						}
+						err := cmd.Run()
+						if err != nil {
+							if TcpScan(v, output) {
+								number++
+								ipAlive = append(ipAlive, v)
+								//File.WriteFile(output, host+"  is alive!\n")
+								//fmt.Printf("%s is alive！\n", host)
+							}
+						} else {
+							number++
+							ipAlive = append(ipAlive, v)
+							File.WriteFile(output, v+"  is alive!\n")
+							fmt.Printf("%s is alive！\n", v)
+						}
+					}
+					wg.Done()
+				}
+			}()
+		}
+		for _, ip := range ips {
+			wg.Add(1)
+			task <- ip
+		}
+		close(task)
+		wg.Wait()
+	}
 }
 
 func DomainIcmp(ips []string, o string) []string {
@@ -138,7 +193,7 @@ func TcpScan(host string, output string) bool {
 		if err != nil {
 			return false
 		} else {
-			ms := "[+tcp] " + host + ":" + strconv.Itoa(port) + " " + "is alive! (目标禁用了icmp协议)"
+			ms := "[+tcp] " + host + ":" + strconv.Itoa(port) + " " + "is alive! (目标可能禁用了icmp协议)"
 			File.WriteFile(output, ms+"\n")
 			println(ms)
 			return true
@@ -147,6 +202,85 @@ func TcpScan(host string, output string) bool {
 		conn.Close()
 	}
 	return false
+}
+
+func IcmpAlive(ip string, o string) {
+	GateAwayList := GetGateAway(ip)
+	GateAwayIcmp(GateAwayList, o)
+	//IpIcmp(GateAwayList, o)
+}
+
+func GetGateAway(ip string) []string {
+	GateAwayList := make([]string, 0)
+	GateAwayListOne := make([]bool, 3)
+	strArr := strings.Split(ip, ".")
+	for index := 2; index > 0; index-- {
+		if strArr[index] == "*" && index == 2 {
+			for i := 0; i < 255; i++ {
+				GateAwayList = append(GateAwayList, fmt.Sprintf("%s.%s.%d.1", strArr[0], strArr[1], i))
+				GateAwayList = append(GateAwayList, fmt.Sprintf("%s.%s.%d.254", strArr[0], strArr[1], i))
+			}
+			GateAwayListOne[2] = true
+		}
+		if strArr[index] == "*" && index == 1 {
+			if GateAwayListOne[2] {
+				GateAwayList = nil
+				for j := 0; j < 255; j++ {
+					for i := 0; i < 255; i++ {
+						GateAwayList = append(GateAwayList, fmt.Sprintf("%s.%d.%d.1", strArr[0], i, j))
+						GateAwayList = append(GateAwayList, fmt.Sprintf("%s.%d.%d.254", strArr[0], i, j))
+					}
+				}
+			} else {
+				for i := 0; i < 255; i++ {
+					GateAwayList = append(GateAwayList, fmt.Sprintf("%s.%d.%s.1", strArr[0], i, strArr[2]))
+					GateAwayList = append(GateAwayList, fmt.Sprintf("%s.%d.%s.254", strArr[0], i, strArr[2]))
+				}
+			}
+			GateAwayListOne[1] = true
+		}
+		if strArr[index] == "*" && index == 0 {
+			//GateAwayListOne[0] = true
+			//192 ,172, 10
+			var adds = [3]int{192, 172, 10}
+			if GateAwayListOne[2] && GateAwayListOne[1] {
+				GateAwayList = nil
+				for j := 0; j < 255; j++ {
+					for i := 0; i < 255; i++ {
+						for _, add := range adds {
+							GateAwayList = append(GateAwayList, fmt.Sprintf("%d.%d.%d.1", add, i, j))
+							GateAwayList = append(GateAwayList, fmt.Sprintf("%d.%d.%d.254", add, i, j))
+						}
+					}
+				}
+			} else if GateAwayListOne[2] {
+				GateAwayList = nil
+				for i := 0; i < 255; i++ {
+					for _, add := range adds {
+						GateAwayList = append(GateAwayList, fmt.Sprintf("%d.%s.%d.1", add, strArr[1], i))
+						GateAwayList = append(GateAwayList, fmt.Sprintf("%d.%s.%d.254", add, strArr[1], i))
+					}
+				}
+			} else if GateAwayListOne[1] {
+				//println(123)
+				GateAwayList = nil
+				for i := 0; i < 255; i++ {
+					for _, add := range adds {
+						GateAwayList = append(GateAwayList, fmt.Sprintf("%d.%d.%s.1", add, i, strArr[2]))
+						GateAwayList = append(GateAwayList, fmt.Sprintf("%d.%d.%s.254", add, i, strArr[2]))
+					}
+				}
+
+			} else {
+				for _, add := range adds {
+					GateAwayList = append(GateAwayList, fmt.Sprintf("%d.%s.%s.1", add, strArr[1], strArr[2]))
+					GateAwayList = append(GateAwayList, fmt.Sprintf("%d.%s.%s.254", add, strArr[1], strArr[2]))
+				}
+			}
+		}
+
+	}
+	return GateAwayList
 }
 
 // udp

@@ -2,6 +2,7 @@ package Format
 
 import (
 	"awesomeProject/lib/File"
+	p "awesomeProject/lib/Plugins"
 	"awesomeProject/lib/exec"
 	"awesomeProject/lib/pkg/afrog/config"
 	afrogresult "awesomeProject/lib/pkg/afrog/result"
@@ -247,7 +248,7 @@ func IsUrl(url string) bool {
 	matched, err := regexp.MatchString(pattern, url)
 
 	if err != nil {
-		fmt.Println("正则匹配出错:", err)
+		//fmt.Println("正则匹配出错:", err)
 		return false
 	}
 
@@ -333,7 +334,7 @@ func ipIsAlive(host string, output string) bool {
 	return false
 }
 
-func Choose(host string, port string, w bool, dict bool, o string, path bool, poc bool, searchPoc string) {
+func Choose(host string, port string, w bool, dict bool, o string, path bool, poc bool, searchPoc string, Plugins string) {
 	pathDict := "path.txt"
 	threads := 80
 	hosts, format := ChooseFormat(host)
@@ -442,6 +443,15 @@ func Choose(host string, port string, w bool, dict bool, o string, path bool, po
 		//访问连通性--指纹识别--poc探测
 		//todo js爬取 深度扫描
 		//WebFinger(host)
+		//支持的插件
+		var ps p.PluginService
+		ps.Host = host
+		ParsePlugins(Plugins, ps)
+
+		if searchPoc != "" {
+			webPoc(host, searchPoc, o)
+			return
+		}
 		httpRunner(hosts, o)
 		//technologies []string todo poc扫描
 		technologies := httpxrunner.Techs
@@ -450,9 +460,6 @@ func Choose(host string, port string, w bool, dict bool, o string, path bool, po
 			techs = tech + "," + techs
 		}
 		techs = strings.TrimRight(techs, ",")
-		if searchPoc != "" {
-			webPoc(host, searchPoc, o)
-		}
 		if poc {
 			webPoc(host, techs, o)
 		}
@@ -520,12 +527,14 @@ func readLinesFromFile(filename string) ([]string, error) {
 func checkData(data string, o string, poc bool, searchPoc string) {
 	//urls := make([]string, 0)
 
+	if searchPoc != "" {
+		webPoc(data, searchPoc, o)
+		return
+	}
+
 	urls := make([]string, 0)
 	urls = append(urls, data)
 	httpRunner(urls, o)
-	if searchPoc != "" {
-		webPoc(data, searchPoc, o)
-	}
 	if poc {
 		technologies := httpxrunner.Techs
 		if technologies != nil {
