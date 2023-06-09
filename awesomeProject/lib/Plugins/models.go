@@ -18,14 +18,14 @@ var (
 func init() {
 	Plugin = map[string]pluginScan{
 		"401":       Force401Scan,
-		"PathCrack": PathCrack,
-		"JsFinder":  JsFinder,
-		"PortCrack": PortCrack,
+		"pathcrack": PathCrack,
+		"jsfinder":  JsFinder,
+		"portcrack": PortCrack,
 	}
 	PluginModel = map[string]string{
 		"401": "针对网站401认证进行暴力破解",
 		//"PathCrack": "针对网站目录进行暴力破解",
-		"JsFinder": "针对网站JS爬取链接",
+		"JsFinder": "爬取网站前端敏感信息，爬取可用接口链接",
 		//"PortCrack": "针对诸如22，3306等服务端口，进行爆破密码",
 	}
 

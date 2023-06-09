@@ -336,7 +336,7 @@ func ipIsAlive(host string, output string) bool {
 
 func Choose(host string, port string, w bool, dict bool, o string, path bool, poc bool, searchPoc string, Plugins string) {
 	pathDict := "path.txt"
-	threads := 80
+	threads := 50
 	hosts, format := ChooseFormat(host)
 	switch strings.ToLower(format) {
 	case "ip":
@@ -437,16 +437,16 @@ func Choose(host string, port string, w bool, dict bool, o string, path bool, po
 			}
 		}
 
-		//todo 子域名爆破 深度扫描
-
 	case "url":
 		//访问连通性--指纹识别--poc探测
 		//todo js爬取 深度扫描
 		//WebFinger(host)
 		//支持的插件
-		var ps p.PluginService
-		ps.Host = host
-		ParsePlugins(Plugins, ps)
+		if Plugins != "" {
+			var ps p.PluginService
+			ps.Host = host
+			ParsePlugins(Plugins, ps)
+		}
 
 		if searchPoc != "" {
 			webPoc(host, searchPoc, o)
@@ -528,8 +528,13 @@ func checkData(data string, o string, poc bool, searchPoc string) {
 	//urls := make([]string, 0)
 
 	if searchPoc != "" {
-		webPoc(data, searchPoc, o)
-		return
+		if searchPoc == "list" {
+
+			return
+		} else {
+			webPoc(data, searchPoc, o)
+			return
+		}
 	}
 
 	urls := make([]string, 0)
