@@ -15,6 +15,7 @@ import (
 	"awesomeProject/lib/pkg/runner"
 	"awesomeProject/lib/pkg/scan"
 	"bufio"
+	"crypto/tls"
 	"encoding/binary"
 	"fmt"
 	crack2 "github.com/niudaii/crack/pkg/crack"
@@ -25,12 +26,14 @@ import (
 	_ "github.com/projectdiscovery/utils/slice"
 	"github.com/tidwall/gjson"
 	"net"
+	"net/http"
 	"os"
 	"regexp"
 	"strconv"
 	"strings"
 	"sync"
 	"sync/atomic"
+	"time"
 )
 
 type service struct {
@@ -334,10 +337,25 @@ func ipIsAlive(host string, output string) bool {
 	return false
 }
 
-func Choose(host string, port string, w bool, dict bool, o string, path bool, poc bool, searchPoc string, Plugins string) {
-	pathDict := "path.txt"
-	threads := 50
+func isHTTPPort(url string) bool {
+	tr := &http.Transport{
+		TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
+	}
+	client := &http.Client{Transport: tr, Timeout: 2 * time.Second}
+	uri := fmt.Sprintf("http://%s", url)
+	resp, err := client.Head(uri)
+
+	if err != nil {
+		return false
+	}
+	defer resp.Body.Close()
+	return true
+}
+
+func Choose(host string, port string, w bool, dict bool, o string, poc bool, searchPoc string, Plugins string) {
 	hosts, format := ChooseFormat(host)
+	var ps p.PluginService
+	ps.Host = host
 	switch strings.ToLower(format) {
 	case "ip":
 		//先判断是内网环境/外网环境
@@ -360,16 +378,16 @@ func Choose(host string, port string, w bool, dict bool, o string, path bool, po
 			for _, data := range datas {
 				File.WriteFile(o, data+"\n")
 			}
+			//浪费了性能 应该识别为http后传给httpx
 			for _, input := range inputs {
-				//println(input)
 				//http指纹识别 or poc探测
-				checkData(input, o, poc, searchPoc)
+				if isHTTPPort(input) {
+					if Plugins != "" {
+						ParsePlugins(Plugins, ps)
+					}
+					checkData(input, o, poc, searchPoc)
+				}
 			}
-
-			if path {
-				brutePath(host, hosts, o, pathDict, threads)
-			}
-
 			if dict {
 				brute(datas, "user.txt", "pass.txt")
 			} else {
@@ -392,11 +410,12 @@ func Choose(host string, port string, w bool, dict bool, o string, path bool, po
 			}
 		}
 		for _, input := range inputs {
-			checkData(input, o, poc, searchPoc)
-		}
-
-		if path {
-			brutePath(host, hosts, o, pathDict, threads)
+			if isHTTPPort(input) {
+				if Plugins != "" {
+					ParsePlugins(Plugins, ps)
+				}
+				checkData(input, o, poc, searchPoc)
+			}
 		}
 
 		println("正在进行系统端口指纹识别~ 请稍等------------------------------")
@@ -430,11 +449,11 @@ func Choose(host string, port string, w bool, dict bool, o string, path bool, po
 			for _, data := range datas {
 				println(data)
 			}
+			if Plugins != "" {
+				ParsePlugins(Plugins, ps)
+			}
 			checkData(host, o, poc, searchPoc)
 
-			if path {
-				brutePath(host, hosts, o, pathDict, threads)
-			}
 		}
 
 	case "url":
@@ -443,8 +462,6 @@ func Choose(host string, port string, w bool, dict bool, o string, path bool, po
 		//WebFinger(host)
 		//支持的插件
 		if Plugins != "" {
-			var ps p.PluginService
-			ps.Host = host
 			ParsePlugins(Plugins, ps)
 		}
 
@@ -463,10 +480,6 @@ func Choose(host string, port string, w bool, dict bool, o string, path bool, po
 		if poc {
 			webPoc(host, techs, o)
 		}
-		if path {
-			//目录爆破线程暂定为80
-			brutePath(host, hosts, o, pathDict, threads)
-		}
 	}
 }
 
@@ -481,7 +494,7 @@ func brutePath(host string, hosts goflags.StringSlice, o string, path string, th
 	urls = append(urls, host)
 	requests := make(chan string)
 	//排除了404和400状态码显示
-	lines, _ := readLinesFromFile(path)
+	lines, _ := ReadLinesFromFile(path)
 	for i := 0; i < threads; i++ {
 		//wg.Add(1)
 		go func() {
@@ -505,7 +518,7 @@ func brutePath(host string, hosts goflags.StringSlice, o string, path string, th
 	wg.Wait()
 }
 
-func readLinesFromFile(filename string) ([]string, error) {
+func ReadLinesFromFile(filename string) ([]string, error) {
 	file, err := os.Open(filename)
 	if err != nil {
 		return nil, err
@@ -529,7 +542,6 @@ func checkData(data string, o string, poc bool, searchPoc string) {
 
 	if searchPoc != "" {
 		if searchPoc == "list" {
-
 			return
 		} else {
 			webPoc(data, searchPoc, o)

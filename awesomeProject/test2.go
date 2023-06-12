@@ -33,7 +33,6 @@ func main() {
 		//url      string
 		port      string
 		dict      bool
-		path      bool
 		pocs      bool
 		searchPoc string
 		icmp      string
@@ -47,7 +46,7 @@ func main() {
 	flag.StringVar(&filePath, "hf", "", "指定需扫描的IP/域名/url 文件路径")
 	flag.StringVar(&outPut, "output", "output.txt", "导出扫描结果到指定文件")
 	flag.BoolVar(&dict, "dict", false, "是否对端口服务(ssh,ftp..)进行爆破，默认不爆破")
-	flag.BoolVar(&path, "path", false, "是否进行目录爆破,默认不爆破")
+	//flag.BoolVar(&path, "path", false, "是否进行目录爆破,默认不爆破")
 	flag.BoolVar(&pocs, "pocs", false, "是否进行自动poc探测,默认不探测")
 	//flag.StringVar(&subdomain, "domain", false, "是否爆破子域名，默认不爆破")
 	flag.StringVar(&searchPoc, "s", "", "跳过指纹识别,对目标网址指定poc探测,例：-s shiro,seeyon,weblogic,thinkphp")
@@ -66,14 +65,14 @@ func main() {
 	//如只在命令行输入资产，则认为扫描资产数量不大
 	if filePath == "" && host != "" {
 		//File.CreateFile(outPut)
-		Format.Choose(host, port, true, dict, outPut, path, pocs, searchPoc, Plugins)
+		Format.Choose(host, port, true, dict, outPut, pocs, searchPoc, Plugins)
 	}
 	if filePath != "" && host == "" {
 		//File.CreateFile(outPut)
 		ips, _ := File.ReadIPRangesFromFile(filePath)
 		for _, host := range ips {
 			//choose 一次只读取一条资产
-			Format.Choose(host, port, true, dict, outPut, path, pocs, searchPoc, Plugins)
+			Format.Choose(host, port, true, dict, outPut, pocs, searchPoc, Plugins)
 		}
 	}
 	if host == "" && filePath == "" {

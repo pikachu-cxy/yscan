@@ -17,7 +17,7 @@ func Force401Scan(model PluginService) {
 	client := &http.Client{Transport: tr, Timeout: time.Second}
 	if req, err := client.Head(model.Host); err == nil {
 		if req.StatusCode == 401 {
-			req, err := http.NewRequest("HEAD", model.Host, nil)
+			req, err := http.NewRequest("", model.Host, nil)
 			if err == nil {
 				for _, user := range basicusers {
 					for _, pass := range basicpass {
