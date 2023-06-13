@@ -74,7 +74,7 @@ yscan.exe -host http://192.168.2.150:8081/ -s tomcat
 # 参考&引用的项目
 [https://github.com/veo/vscan](https://github.com/veo/vscan)  
 [https://github.com/praetorian-inc/fingerprintx](https://github.com/praetorian-inc/fingerprintx)  
-[https://github.com/niudaii/crack](https://github.com/niudaii/crack)
+[https://github.com/niudaii/crack](https://github.com/niudaii/crack)  
 [https://github.com/projectdiscovery/httpx](https://github.com/projectdiscovery/httpx)  
 [https://github.com/zan8in/afrog](https://github.com/zan8in/afrog)  
 [https://github.com/lcvvvv/kscan](https://github.com/lcvvvv/kscan)
