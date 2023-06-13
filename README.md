@@ -38,7 +38,7 @@ go build -ldflags="-s -w "
 ```
 参数不多，功能也不复杂~ 希望可以用最少的参数实现最多的功能可能性  
 # 使用截图  
-![yscan.exe -host 127.0.0.1](https://raw.githubusercontent.com/pikachu-cxy/yscan/main/images/002.png](https://raw.githubusercontent.com/pikachu-cxy/yscan/main/images/002.png?token=GHSAT0AAAAAAB6RMAESK5X4U5EN6SBB4ZE2ZEH3NYQ)  
+![yscan.exe -host 127.0.0.1](https://raw.githubusercontent.com/pikachu-cxy/yscan/main/images/002.png?token=GHSAT0AAAAAAB6RMAESK5X4U5EN6SBB4ZE2ZEH3NYQ)  
 ![yscan.exe -icmp 192.168.*.1](https://raw.githubusercontent.com/pikachu-cxy/yscan/main/images/003.png)  
 
 
