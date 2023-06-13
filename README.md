@@ -32,7 +32,7 @@
   -s string
         跳过指纹识别,对目标网址指定poc探测,例：-s shiro,seeyon,weblogic,thinkphp  
 ```
-编辑命令：
+编译命令：
 ```
 go build -ldflags="-s -w "  
 ```
