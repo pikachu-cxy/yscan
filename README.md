@@ -5,7 +5,7 @@
 基础用法
 ```
 .\yscan.exe -host 127.0.0.1
-.\yscan.exe -host 192.168.1/24
+.\yscan.exe -host 192.168.1.1/24
 .\yscan.exe -host www.example.com
 .\yscan.exe -host http://www.example.com
 .\yscan.exe -hf 1.txt
@@ -43,14 +43,17 @@ yscan.exe -host 127.0.0.1
 ```  
 ![](https://github.com/pikachu-cxy/yscan/blob/71a05f31413a109f0c9577122844cf40a7b79665/images/009.png)  
 ```
+快速探测内网存在哪些网段
 yscan.exe -icmp 192.168.*.1
 ``` 
 ![](https://github.com/pikachu-cxy/yscan/blob/71a05f31413a109f0c9577122844cf40a7b79665/images/003.png)  
 ```
+并不是通过端口判断指纹，下图爆破1521端口的mysql
 yscan.exe -host 127.0.0.1 -port 1521 -dict
 ``` 
 ![](https://github.com/pikachu-cxy/yscan/blob/71a05f31413a109f0c9577122844cf40a7b79665/images/004.png)  
 ```
+目前只针对url，提供了jsfinder，basic认证，目录爆破三种功能
 yscan.exe -plugins list
 ```
 ![](https://github.com/pikachu-cxy/yscan/blob/71a05f31413a109f0c9577122844cf40a7b79665/images/005.png)  
@@ -64,6 +67,14 @@ yscan.exe -host http://192.168.2.150:8081/host-manager/html -plugins 401
 ```
 ![](https://github.com/pikachu-cxy/yscan/blob/71a05f31413a109f0c9577122844cf40a7b79665/images/008.png)
 ```
+指定漏洞tag扫描探测
 yscan.exe -host http://192.168.2.150:8081/ -s tomcat 
 ```
-![](https://github.com/pikachu-cxy/yscan/blob/71a05f31413a109f0c9577122844cf40a7b79665/images/007.png)
+![](https://github.com/pikachu-cxy/yscan/blob/71a05f31413a109f0c9577122844cf40a7b79665/images/007.png)  
+# 参考&引用的项目
+[https://github.com/veo/vscan](https://github.com/veo/vscan)  
+[https://github.com/praetorian-inc/fingerprintx](https://github.com/praetorian-inc/fingerprintx)  
+[https://github.com/niudaii/crack](https://github.com/niudaii/crack)
+[https://github.com/projectdiscovery/httpx](https://github.com/projectdiscovery/httpx)  
+[https://github.com/zan8in/afrog](https://github.com/zan8in/afrog)  
+[https://github.com/lcvvvv/kscan](https://github.com/lcvvvv/kscan)
