@@ -41,7 +41,7 @@ go build -ldflags="-s -w "
 ```
 yscan.exe -host 127.0.0.1
 ```  
-![](https://github.com/pikachu-cxy/yscan/blob/71a05f31413a109f0c9577122844cf40a7b79665/images/009.png)  
+![](https://raw.githubusercontent.com/pikachu-cxy/yscan/main/images/009.png)   
 ```
 快速探测内网存在哪些网段
 yscan.exe -icmp 192.168.*.1
