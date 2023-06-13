@@ -38,8 +38,32 @@ go build -ldflags="-s -w "
 ```
 参数不多，功能也不复杂~ 希望可以用最少的参数实现最多的功能可能性  
 # 使用截图  
-![yscan.exe -host 127.0.0.1](https://github.com/pikachu-cxy/yscan/blob/71a05f31413a109f0c9577122844cf40a7b79665/images/002.png)  
-![yscan.exe -icmp 192.168.*.1](https://github.com/pikachu-cxy/yscan/blob/71a05f31413a109f0c9577122844cf40a7b79665/images/003.png)  
-
-
-
+```
+yscan.exe -host 127.0.0.1
+```  
+![](https://github.com/pikachu-cxy/yscan/blob/71a05f31413a109f0c9577122844cf40a7b79665/images/002.png)  
+```
+yscan.exe -icmp 192.168.*.1
+``` 
+![](https://github.com/pikachu-cxy/yscan/blob/71a05f31413a109f0c9577122844cf40a7b79665/images/003.png)  
+```
+yscan.exe -host 127.0.0.1 -port 1521 -dict
+``` 
+![](https://github.com/pikachu-cxy/yscan/blob/71a05f31413a109f0c9577122844cf40a7b79665/images/004.png)  
+```
+yscan.exe -plugins list
+```
+![](https://github.com/pikachu-cxy/yscan/blob/71a05f31413a109f0c9577122844cf40a7b79665/images/005.png)  
+```
+yscan.exe -host http://192.168.2.150:8081 -plugins jsfinder
+```
+![](https://github.com/pikachu-cxy/yscan/blob/71a05f31413a109f0c9577122844cf40a7b79665/images/006.png)  
+```
+tomcat 401 basic认证爆破
+yscan.exe -host http://192.168.2.150:8081/host-manager/html -plugins 401
+```
+![](https://github.com/pikachu-cxy/yscan/blob/71a05f31413a109f0c9577122844cf40a7b79665/images/008.png)
+```
+yscan.exe -host http://192.168.2.150:8081/ -s tomcat 
+```
+![](https://github.com/pikachu-cxy/yscan/blob/71a05f31413a109f0c9577122844cf40a7b79665/images/007.png)
