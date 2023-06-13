@@ -187,19 +187,17 @@ func DnsLookup(host string) bool {
 func TcpScan(host string, output string) bool {
 	ports := []int{21, 22, 80, 135, 139, 443, 445, 3389, 8080}
 	for _, port := range ports {
+
 		address := fmt.Sprintf("%s:%d", host, port)
 
 		conn, err := net.DialTimeout("tcp", address, time.Second)
-		if err != nil {
-			return false
-		} else {
+		if err == nil {
 			ms := "[+tcp] " + host + ":" + strconv.Itoa(port) + " " + "is alive! (目标可能禁用了icmp协议)"
 			File.WriteFile(output, ms+"\n")
 			println(ms)
+			conn.Close()
 			return true
 		}
-
-		conn.Close()
 	}
 	return false
 }
