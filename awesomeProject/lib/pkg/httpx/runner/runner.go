@@ -1872,7 +1872,7 @@ func (r *Runner) handleFaviconHash(hp *httpx.HTTPX, req *retryablehttp.Request, 
 }
 
 func (r *Runner) calculateFaviconHashWithRaw(data []byte) (string, error) {
-	hashNum := stringz.FaviconHash(data)
+	hashNum, _ := stringz.FaviconHash(data)
 
 	return fmt.Sprintf("%d", hashNum), nil
 }

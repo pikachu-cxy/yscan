@@ -185,7 +185,7 @@ func DnsLookup(host string) bool {
 }
 
 func TcpScan(host string, output string) bool {
-	ports := []int{21, 22, 80, 135, 139, 443, 445, 3389, 8080}
+	ports := []int{21, 22, 23, 80, 135, 139, 443, 445, 3389, 8000, 8001, 8080}
 	for _, port := range ports {
 
 		address := fmt.Sprintf("%s:%d", host, port)

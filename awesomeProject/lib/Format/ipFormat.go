@@ -352,7 +352,7 @@ func isHTTPPort(url string) bool {
 	return true
 }
 
-func Choose(host string, port string, w bool, dict bool, o string, poc bool, searchPoc string, Plugins string) {
+func Choose(host string, port string, w bool, dict bool, o string, poc bool, searchPoc string, Plugins string, noping bool) {
 	hosts, format := ChooseFormat(host)
 	var ps p.PluginService
 	ps.Host = host
@@ -361,7 +361,7 @@ func Choose(host string, port string, w bool, dict bool, o string, poc bool, sea
 		//先判断是内网环境/外网环境
 		//内网可以arp udp tcp http
 		host = hosts[0]
-		if ipIsAlive(host, o) {
+		if noping || ipIsAlive(host, o) {
 			portsMap, _ := exec.ParsePorts(port)
 			inputs := exec.Scan(portsMap, host, w, o)
 			//对系统端口进行指纹识别
@@ -396,17 +396,31 @@ func Choose(host string, port string, w bool, dict bool, o string, poc bool, sea
 		}
 	case "ips":
 		//为了保证扫描效率，当无法ping通目标ip，则认为不存活
-		ipAlive := exec.IpIcmp(hosts, o)
-		portsMap, _ := exec.ParsePorts(port)
 		targetsList := make([]plugins.Target, 0)
 		inputs := make([]string, 0)
-		for _, host := range ipAlive {
-			inputs = exec.Scan(portsMap, host, w, o)
-			//finger识别开始
-			for _, input := range inputs {
-				//println(input)
-				parsedTarget, _ := runner.ParseTarget(input)
-				targetsList = append(targetsList, parsedTarget)
+		if noping {
+			portsMap, _ := exec.ParsePorts(port)
+			for _, host := range hosts {
+				inputs = exec.Scan(portsMap, host, w, o)
+				//finger识别开始
+				for _, input := range inputs {
+					//println(input)
+					parsedTarget, _ := runner.ParseTarget(input)
+					targetsList = append(targetsList, parsedTarget)
+				}
+			}
+		} else {
+			ipAlive := exec.IpIcmp(hosts, o)
+
+			portsMap, _ := exec.ParsePorts(port)
+			for _, host := range ipAlive {
+				inputs = exec.Scan(portsMap, host, w, o)
+				//finger识别开始
+				for _, input := range inputs {
+					//println(input)
+					parsedTarget, _ := runner.ParseTarget(input)
+					targetsList = append(targetsList, parsedTarget)
+				}
 			}
 		}
 		for _, input := range inputs {
