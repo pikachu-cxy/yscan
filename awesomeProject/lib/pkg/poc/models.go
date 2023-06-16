@@ -19,6 +19,9 @@ type Payloads struct {
 	Payloads yaml.MapSlice `yaml:"payloads"`
 }
 
+// 以下是 脚本部分
+var order = 0
+
 // 用于帮助yaml解析，保证Rule有序
 type RuleMap struct {
 	Key   string
@@ -27,6 +30,7 @@ type RuleMap struct {
 
 // 用于帮助yaml解析，保证Rule有序
 type RuleMapSlice []RuleMap
+
 type Rule struct {
 	Request        RuleRequest   `yaml:"request"`
 	Expression     string        `yaml:"expression"`
@@ -94,4 +98,44 @@ type Classification struct {
 	CvssScore   float64 `yaml:"cvss-score"`
 	CveId       string  `yaml:"cve-id"`
 	CweId       string  `yaml:"cwe-id"`
+}
+
+func (r *Rule) UnmarshalYAML(unmarshal func(any) error) error {
+	var tmp ruleAlias
+	if err := unmarshal(&tmp); err != nil {
+		return err
+	}
+
+	r.Request = tmp.Request
+	r.Expression = tmp.Expression
+	r.Expressions = append(r.Expressions, tmp.Expressions...)
+	r.Output = tmp.Output
+	r.StopIfMatch = tmp.StopIfMatch
+	r.StopIfMismatch = tmp.StopIfMismatch
+	r.BeforeSleep = tmp.BeforeSleep
+	r.order = order
+
+	order += 1
+	return nil
+}
+
+func (m *RuleMapSlice) UnmarshalYAML(unmarshal func(any) error) error {
+	order = 0
+
+	tempMap := make(map[string]Rule, 1)
+	err := unmarshal(&tempMap)
+	if err != nil {
+		return err
+	}
+
+	newRuleSlice := make([]RuleMap, len(tempMap))
+	for roleName, role := range tempMap {
+		newRuleSlice[role.order] = RuleMap{
+			Key:   roleName,
+			Value: role,
+		}
+	}
+
+	*m = RuleMapSlice(newRuleSlice)
+	return nil
 }

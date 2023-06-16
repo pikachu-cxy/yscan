@@ -6,7 +6,8 @@ import (
 
 func TestScanURL(t *testing.T) {
 
-	//url := "http://101.42.135.249:8080/"
-	//Scan(url, "tomcat")
-
+	//FileForEachComplete("C:\\Users\\simple.chen\\Downloads\\yscan5\\awesomeProject\\pocs")
+	// 构造测试数据
+	//filterPoc("landray")
+	Scan("https://101.42.135.249:5003/")
 }

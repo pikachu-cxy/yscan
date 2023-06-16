@@ -32,7 +32,6 @@ func GetPocs() ([]string, error) {
 
 func GetPocDetail(pocname string) (string, error) {
 	var result string
-
 	err := fs.WalkDir(f, ".", func(path string, d fs.DirEntry, err error) error {
 		if err != nil {
 			return err
@@ -57,7 +56,6 @@ func GetPocDetail(pocname string) (string, error) {
 
 func ReadPocs(path string) (poc.Poc, error) {
 	var poc = poc.Poc{}
-
 	file, err := f.Open(path)
 	if err != nil {
 		return poc, err
