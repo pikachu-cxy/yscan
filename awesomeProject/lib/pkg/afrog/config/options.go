@@ -116,9 +116,12 @@ type Options struct {
 	OJ *output.OutputJson
 }
 
-func NewOptions(target string, search string) (*Options, error) {
+func NewOptions(target string, search string, pl bool) (*Options, error) {
+	//路径处理可能存在问题
+	dir, _ := os.Getwd()
+	path := dir + "\\pocs\\"
+	options := &Options{Target: target, Search: search, RateLimit: 150, Silent: true, DisableOutputHtml: true, Timeout: 10, PocList: pl, PocFile: path}
 
-	options := &Options{Target: target, Search: search, RateLimit: 150, Silent: true, DisableOutputHtml: true, Timeout: 10}
 	/*
 		flagSet := goflags.NewFlagSet()
 		flagSet.SetDescription(`afrog`)
@@ -172,7 +175,6 @@ func NewOptions(target string, search string) (*Options, error) {
 		_ = flagSet.Parse()
 
 	*/
-
 	if err := options.verifyOptions(); err != nil {
 		return options, err
 	}

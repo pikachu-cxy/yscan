@@ -8,6 +8,7 @@ import (
 	"flag"
 	"fmt"
 	_ "github.com/praetorian-inc/fingerprintx/pkg/plugins"
+	"strings"
 	"time"
 )
 
@@ -49,7 +50,7 @@ func main() {
 	flag.BoolVar(&dict, "dict", false, "是否对端口服务(ssh,ftp..)进行爆破，默认不爆破")
 	flag.BoolVar(&pocs, "pocs", false, "是否进行自动poc探测,默认不探测")
 	//flag.StringVar(&subdomain, "domain", false, "是否爆破子域名，默认不爆破")
-	flag.StringVar(&searchPoc, "s", "", "跳过指纹识别,对目标网址指定poc探测,例：-s shiro,seeyon,weblogic,thinkphp")
+	flag.StringVar(&searchPoc, "s", "", "跳过指纹识别,对目标网址指定poc探测,例：-s shiro,seeyon,weblogic,thinkphp, -s list 查看程序目前支持的poc")
 	flag.StringVar(&Plugins, "plugins", "", "针对url进行测试，可指定使用某个插件(401,jsfinder...),-plugins list 查看程序目前支持的所有插件详情")
 	//flag.StringVar(&proxy, "proxy", "", "指定使用的代理 http://127.0.0.1:8080")
 	flag.BoolVar(&noping, "noping", false, "不进行ip存活探测")
@@ -61,6 +62,11 @@ func main() {
 
 	if icmp != "" {
 		exec.IcmpAlive(icmp, outPut)
+	}
+
+	if strings.ToLower(searchPoc) == "list" {
+		Format.WebPoc(host, searchPoc, outPut, true)
+		return
 	}
 
 	//如只在命令行输入资产，则认为扫描资产数量不大

@@ -75,21 +75,22 @@ func NewRunner(options *config.Options) (*Runner, error) {
 	// init pocs
 	allPocsEmbedYamlSlice := []string{}
 	if len(runner.options.PocFile) > 0 {
+		//println(runner.options.PocFile)
 		runner.options.PocsDirectory.Set(runner.options.PocFile)
-	} else {
-		// init default afrog-pocs
-		if allDefaultPocsYamlSlice, err := pocs.GetPocs(); err == nil {
-			allPocsEmbedYamlSlice = append(allPocsEmbedYamlSlice, allDefaultPocsYamlSlice...)
-		}
-		// init ~/afrog-pocs
-		pocsDir, _ := poc.InitPocHomeDirectory()
-		if len(pocsDir) > 0 {
-			runner.options.PocsDirectory.Set(pocsDir)
-		}
 	}
-	allPocsYamlSlice := runner.catalog.GetPocsPath(runner.options.PocsDirectory)
+	// init default afrog-pocs
+	if allDefaultPocsYamlSlice, err := pocs.GetPocs(); err == nil {
+		allPocsEmbedYamlSlice = append(allPocsEmbedYamlSlice, allDefaultPocsYamlSlice...)
+	}
+	// init ~/afrog-pocs
+	pocsDir, _ := poc.InitPocHomeDirectory()
+	if len(pocsDir) > 0 {
+		runner.options.PocsDirectory.Set(pocsDir)
+	}
 
+	allPocsYamlSlice := runner.catalog.GetPocsPath(runner.options.PocsDirectory)
 	if len(allPocsYamlSlice) == 0 && len(allPocsEmbedYamlSlice) == 0 {
+
 		return runner, errors.New("afrog-pocs not found")
 	}
 

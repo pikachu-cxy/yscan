@@ -1,6 +1,7 @@
 package runner
 
 import (
+	"awesomeProject/lib/pkg/afrog/pocs"
 	"github.com/panjf2000/ants/v2"
 	"strings"
 	"sync"
@@ -8,7 +9,6 @@ import (
 
 	"awesomeProject/lib/pkg/afrog/config"
 	"awesomeProject/lib/pkg/afrog/poc"
-	"awesomeProject/lib/pkg/afrog/pocs"
 	"awesomeProject/lib/pkg/afrog/result"
 	"github.com/zan8in/gologger"
 )
@@ -55,7 +55,7 @@ func NewEngine(options *config.Options) *Engine {
 func (runner *Runner) Execute() {
 
 	var pocSlice []poc.Poc
-
+	//println(len(runner.PocsYaml))
 	for _, pocYaml := range runner.PocsYaml {
 		p, err := poc.ReadPocs(pocYaml)
 		if err != nil {

@@ -34,15 +34,22 @@ func PathCrack(model PluginService) {
 	tr := &http.Transport{
 		TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
 	}
-	client := &http.Client{Transport: tr, Timeout: 2 * time.Second}
+	client := &http.Client{Transport: tr, Timeout: 5 * time.Second}
 	lines, _ := ReadLinesFromFile(path)
 	//bar := progressbar.Default(int64(len(lines)), "pathBrute")
 	println("正在进行目录扫描~ 请稍等---------------------------------")
 	//请求原始页面
+	//if !strings.HasPrefix(model.Host,"http"){}
 	resp, err := client.Get(model.Host)
 	if err != nil {
 		println("请求网址出错~ 请检查网络状况无误后重试")
 		return
+	}
+	if resp.StatusCode == 400 {
+		uri, f := strings.CutPrefix(model.Host, "http://")
+		if f {
+			model.Host = fmt.Sprintf("https://%s", uri)
+		}
 	}
 	//println("正在进行目录扫描~ 请稍等---------------------------------")
 	for i := 0; i < threads; i++ {

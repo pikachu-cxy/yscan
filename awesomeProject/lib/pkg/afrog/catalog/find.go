@@ -1,6 +1,9 @@
 package catalog
 
 import (
+	"io/fs"
+	"io/ioutil"
+	"log"
 	"os"
 	"path/filepath"
 	"strings"
@@ -42,7 +45,6 @@ func (c *Catalog) GetPocsPath(definitions []string) []string {
 // or folders provided as in.
 func (c *Catalog) GetPocPath(target string) ([]string, error) {
 	processed := make(map[string]struct{})
-
 	absPath, err := c.convertPathToAbsolute(target)
 	if err != nil {
 		return nil, errors.Wrapf(err, "could not find poc file")
@@ -74,7 +76,7 @@ func (c *Catalog) GetPocPath(target string) ([]string, error) {
 
 	// Recursively walk down the Pocs directory and run all
 	// the template file checks
-	matches, err := c.findDirectoryMatches(absPath, processed)
+	matches, _ := c.findDirectoryMatches(absPath, processed)
 	if err != nil {
 		return nil, errors.Wrap(err, "could not find directory matches")
 	}
@@ -150,4 +152,25 @@ func (c *Catalog) findDirectoryMatches(absPath string, processed map[string]stru
 		},
 	})
 	return results, err
+}
+
+func FileForEachComplete(fileFullPath string) []fs.FileInfo {
+
+	files, err := ioutil.ReadDir(fileFullPath)
+	if err != nil {
+		log.Fatal(err)
+	}
+	var myFile []fs.FileInfo
+	for _, file := range files {
+		if file.IsDir() {
+			path := strings.TrimSuffix(fileFullPath, "/") + "/" + file.Name()
+			subFile := FileForEachComplete(path)
+			if len(subFile) > 0 {
+				myFile = append(myFile, subFile...)
+			}
+		} else {
+			myFile = append(myFile, file)
+		}
+	}
+	return myFile
 }

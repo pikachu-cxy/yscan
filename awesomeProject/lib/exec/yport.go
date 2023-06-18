@@ -135,7 +135,7 @@ func ScanPort(portsMap []int, ip string, w bool, output string) []string {
 	return ads
 }
 
-//设置5000线程
+//设置500线程
 
 func Scan(portsMap []int, ip string, w bool, output string) []string {
 	adds := make([]string, 0)
@@ -143,10 +143,10 @@ func Scan(portsMap []int, ip string, w bool, output string) []string {
 	// 使用 WaitGroup 来等待所有协程完成
 	var wg sync.WaitGroup
 
-	for i := 0; i < 5000; i++ {
+	for i := 0; i < 500; i++ {
 		go func() {
 			for ad := range ads {
-				conn, err := net.DialTimeout("tcp", ad, 1*time.Second)
+				conn, err := net.DialTimeout("tcp", ad, 2*time.Second)
 				if err == nil {
 					fmt.Printf("%s is open\n", ad)
 					if w {

@@ -6,8 +6,8 @@ import (
 
 const pocPath = "C:\\Users\\simple.chen\\Downloads\\yscan5\\awesomeProject\\pocs"
 
-func Scan(targetURL string, templatePath string) {
-	// 加载 poc 模板
+func Scan(targetURL string, keyword []string) {
+	// 设置变量
 
 }
 
