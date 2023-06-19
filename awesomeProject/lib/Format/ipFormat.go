@@ -620,17 +620,31 @@ func brute(datas []string, userDict string, passDict string) {
 		}
 		println("正在进行端口服务爆破~ 请稍等------------------------------")
 		//密码爆破 指纹识别到单个结果 即开始爆破
-		options := crackrunner.Options{Input: uri, UserFile: userDict, PassFile: passDict}
-		//fmt.Printf("%v", options)
-		option := crackrunner.ParseOptions(&options)
-		//fmt.Printf("%v", option)
-		//设置爆破参数 线程 超时
-		crackOptions := setOptions(50, 1)
-		newRunner, err := crackrunner.NewRunner(option, crack2.Options(crackOptions))
-		if err != nil {
-			gologger.Fatal().Msgf("Could not create runner: %v", err)
+		if protocol.String() == "redis" || protocol.String() == "memcached" {
+			options := crackrunner.Options{Input: uri}
+			//fmt.Printf("%v", options)
+			option := crackrunner.ParseOptions(&options)
+			//fmt.Printf("%v", option)
+			//设置爆破参数 线程 超时
+			crackOptions := setOptions(50, 1)
+			newRunner, err := crackrunner.NewRunner(option, crack2.Options(crackOptions))
+			if err != nil {
+				gologger.Fatal().Msgf("Could not create runner: %v", err)
+			}
+			newRunner.Run(protocol.String())
+		} else {
+			options := crackrunner.Options{Input: uri, UserFile: userDict, PassFile: passDict}
+			//fmt.Printf("%v", options)
+			option := crackrunner.ParseOptions(&options)
+			//fmt.Printf("%v", option)
+			//设置爆破参数 线程 超时
+			crackOptions := setOptions(50, 1)
+			newRunner, err := crackrunner.NewRunner(option, crack2.Options(crackOptions))
+			if err != nil {
+				gologger.Fatal().Msgf("Could not create runner: %v", err)
+			}
+			newRunner.Run(protocol.String())
 		}
-		newRunner.Run(protocol.String())
 	}
 }
 

@@ -108,7 +108,7 @@ func check(taskInterface interface{}) {
 			oRequest, _ = http.NewRequest("GET", target, nil)
 		}
 
-		isVul, err := executeXrayPoc(oRequest, target, &poc)
+		isVul, err := executeXrayPoc(oRequest, target, &xray_structs.Poc{})
 		if err != nil {
 			utils.ErrorP(err)
 			return
@@ -118,10 +118,10 @@ func check(taskInterface interface{}) {
 		pocResult.Str = fmt.Sprintf("%s (%s)", target, pocName)
 		pocResult.Success = isVul
 		pocResult.URL = target
-		pocResult.PocName = poc.Name
-		pocResult.PocLink = poc.Detail.Links
-		pocResult.PocAuthor = poc.Detail.Author
-		pocResult.PocDescription = poc.Detail.Description
+		pocResult.PocName = poc.Id
+		pocResult.PocLink = poc.Info.Reference
+		pocResult.PocAuthor = poc.Info.Author
+		pocResult.PocDescription = poc.Info.Description
 
 		OutputChannel <- pocResult
 
