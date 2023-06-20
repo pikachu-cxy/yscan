@@ -46,7 +46,7 @@ func PathCrack(model PluginService) {
 		return
 	}
 	if resp.StatusCode == 400 {
-		uri, f := strings.CutPrefix(model.Host, "http://")
+		_, uri, f := strings.Cut(model.Host, "http://")
 		if f {
 			model.Host = fmt.Sprintf("https://%s", uri)
 		}

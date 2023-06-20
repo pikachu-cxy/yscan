@@ -383,6 +383,7 @@ func Choose(host string, port string, w bool, dict bool, o string, poc bool, sea
 				//http指纹识别 or poc探测
 				if isHTTPPort(input) {
 					if Plugins != "" {
+						ps.Host = fmt.Sprintf("http://%s", input)
 						ParsePlugins(Plugins, ps)
 					}
 					checkData(input, o, poc, searchPoc)
@@ -426,6 +427,7 @@ func Choose(host string, port string, w bool, dict bool, o string, poc bool, sea
 		for _, input := range inputs {
 			if isHTTPPort(input) {
 				if Plugins != "" {
+					ps.Host = fmt.Sprintf("http://%s", input)
 					ParsePlugins(Plugins, ps)
 				}
 				checkData(input, o, poc, searchPoc)
@@ -480,7 +482,7 @@ func Choose(host string, port string, w bool, dict bool, o string, poc bool, sea
 		}
 
 		if searchPoc != "" {
-			webPoc(host, searchPoc, o)
+			WebPoc(host, searchPoc, o, false)
 			return
 		}
 		httpRunner(hosts, o)
@@ -492,7 +494,7 @@ func Choose(host string, port string, w bool, dict bool, o string, poc bool, sea
 		}
 		techs = strings.TrimRight(techs, ",")
 		if poc {
-			webPoc(host, techs, o)
+			WebPoc(host, techs, o, false)
 		}
 	}
 }
@@ -558,7 +560,7 @@ func checkData(data string, o string, poc bool, searchPoc string) {
 		if searchPoc == "list" {
 			return
 		} else {
-			webPoc(data, searchPoc, o)
+			WebPoc(data, searchPoc, o, false)
 			return
 		}
 	}
@@ -574,7 +576,7 @@ func checkData(data string, o string, poc bool, searchPoc string) {
 				techs = tech + "," + techs
 			}
 			techs = strings.TrimRight(techs, ",")
-			webPoc(data, techs, o)
+			WebPoc(data, techs, o, false)
 		}
 	}
 }
@@ -659,9 +661,9 @@ func setOptions(thread int, timeout int) crack.Options {
 	return crackOptions
 }
 
-func webPoc(host string, techs string, output string) {
+func WebPoc(host string, techs string, output string, pl bool) {
 
-	options, err := config.NewOptions(host, techs)
+	options, err := config.NewOptions(host, techs, pl)
 	r, err := afrogrunner.NewRunner(options)
 	if err != nil {
 		gologger.Error().Msg(err.Error())

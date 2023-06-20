@@ -120,7 +120,7 @@ func NewOptions(target string, search string, pl bool) (*Options, error) {
 	//路径处理可能存在问题
 	dir, _ := os.Getwd()
 	path := dir + "\\pocs\\"
-	options := &Options{Target: target, Search: search, RateLimit: 150, Silent: true, DisableOutputHtml: true, Timeout: 10, PocList: pl, PocFile: path}
+	options := &Options{Target: target, Search: search, RateLimit: 150, Silent: true, DisableOutputHtml: true, Timeout: 10, PocFile: path, PocList: pl}
 
 	/*
 		flagSet := goflags.NewFlagSet()
